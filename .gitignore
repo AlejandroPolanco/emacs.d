@@ -1,0 +1,8 @@
+# Compiled
+*.elc
+
+# Backup files
+*~
+
+# Personal storage directory
+.cache/
