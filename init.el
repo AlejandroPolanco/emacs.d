@@ -1,7 +1,7 @@
 ;;; init.el --- Emacs Initialization -*- lexical-binding: t; -*-
 ;;
 ;;  Author: Alejandro Polanco <apolanco.sosa@gmail.com>
-;;  URL:    https://github.com/AlejandroPolanco/emacs.d
+;;  URL:    <https://github.com/AlejandroPolanco/emacs.d>
 ;;
 ;;; Commentary:
 ;; A basic monolithic configuration.
@@ -564,7 +564,7 @@ T - tag prefix
 
 ;; Hydras for CIDER.
 (use-package cider-hydra
-  :config
+  :init
   ;; "C-c C-d" => cider-hydra-doc/body
   ;; "C-c C-t" => cider-hydra-test/body
   ;; "C-c M-t" => cider-hydra-test/body
