@@ -222,6 +222,10 @@ decrease this, if experience stuttering, increase this.")
 ;; Don't stretch the cursor to fit wide characters.
 (setq x-stretch-cursor nil)
 
+;; Keep cursor at end of lines.
+(setq-default track-eol t)
+(setq-default line-move-visual nil)
+
 ;; Inhibit rendering the cursor in non-focused windows.
 (setq-default cursor-in-non-selected-windows nil)
 (setq highlight-nonselected-windows nil)
@@ -303,7 +307,6 @@ decrease this, if experience stuttering, increase this.")
 ;; -----------------------------------------------------------------------------
 ;; which-key: Emacs package that displays available keybindings in popup.
 ;; -----------------------------------------------------------------------------
-
 (use-package which-key
   :defer 1
   :diminish
@@ -321,7 +324,6 @@ decrease this, if experience stuttering, increase this.")
 ;; hydra: This is a package for GNU Emacs that can be used to tie related
 ;; commands into a family of short bindings with a common prefix - a Hydra.
 ;; -----------------------------------------------------------------------------
-
 (use-package hydra
   :defer 1
   :diminish)
@@ -330,6 +332,11 @@ decrease this, if experience stuttering, increase this.")
 ;; COLORSCHEME
 ;; =============================================================================
 
+;; -----------------------------------------------------------------------------
+;; modus-operandi: Accessible themes for GNU Emacs, conforming with the highest
+;; accessibility standard for colour contrast between background and foreground
+;; values (WCAG AAA).
+;; -----------------------------------------------------------------------------
 (use-package modus-operandi-theme
   :demand t
   :config (load-theme 'modus-operandi t))
@@ -372,7 +379,7 @@ decrease this, if experience stuttering, increase this.")
 ;; Revert buffers when underlying files change.
 (use-package autorevert
   :ensure nil
-  :defer 5
+  :defer 1
   :diminish
   :config
   (setq auto-revert-verbose t)
@@ -398,7 +405,7 @@ decrease this, if experience stuttering, increase this.")
 ;; Display function signatures or contextual metadata.
 (use-package eldoc
   :ensure nil
-  :defer 2
+  :defer 5
   :diminish
   :hook (prog-mode-hook . eldoc-mode)
   :config
@@ -515,7 +522,6 @@ T - tag prefix
 ;; Magit: A Git Porcelain inside Emacs. Magit is an interface to the
 ;; version control system Git, implemented as an Emacs package.
 ;; -----------------------------------------------------------------------------
-
 (use-package magit
   :defer 1
   :init
@@ -531,7 +537,6 @@ T - tag prefix
 ;; -----------------------------------------------------------------------------
 ;; exec-path-from-shell: Make Emacs use the $PATH set up by the user's shell.
 ;; -----------------------------------------------------------------------------
-
 (when (eq system-type 'darwin)
   (use-package exec-path-from-shell
     :demand t
