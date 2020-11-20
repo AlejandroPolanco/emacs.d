@@ -301,20 +301,7 @@ decrease this, if experience stuttering, increase this.")
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 ;; -----------------------------------------------------------------------------
-;; `hydra': This is a package for GNU Emacs that can be used to tie related
-;; commands into a family of short bindings with a common prefix - a Hydra.
-;;
-;; `source': <https://github.com/abo-abo/hydra>
-;; -----------------------------------------------------------------------------
-
-(use-package hydra
-  :defer 1
-  :diminish)
-
-;; -----------------------------------------------------------------------------
-;; `which-key': Emacs package that displays available keybindings in popup.
-;;
-;; `source': <https://github.com/justbur/emacs-which-key>
+;; which-key: Emacs package that displays available keybindings in popup.
 ;; -----------------------------------------------------------------------------
 
 (use-package which-key
@@ -329,6 +316,23 @@ decrease this, if experience stuttering, increase this.")
   (set-face-attribute 'which-key-local-map-description-face nil :weight 'bold)
   (which-key-setup-side-window-bottom)
   (which-key-mode 1))
+
+;; -----------------------------------------------------------------------------
+;; hydra: This is a package for GNU Emacs that can be used to tie related
+;; commands into a family of short bindings with a common prefix - a Hydra.
+;; -----------------------------------------------------------------------------
+
+(use-package hydra
+  :defer 1
+  :diminish)
+
+;; =============================================================================
+;; COLORSCHEME
+;; =============================================================================
+
+(use-package modus-operandi-theme
+  :demand t
+  :config (load-theme 'modus-operandi t))
 
 ;; =============================================================================
 ;; BUILT-IN PACKAGES
@@ -441,7 +445,6 @@ _S_ymlink          ^ ^              _F_ind marked      _._ toggle hydra   \\ fly
 _r_sync            ^ ^              ^ ^                ^ ^                _?_ summary
 _z_ compress-file  _A_ find regexp
 _Z_ compress       _Q_ repl regexp
-
 T - tag prefix
 "
     ("\\" dired-do-ispell)
@@ -484,7 +487,7 @@ T - tag prefix
   (define-key dired-mode-map "?" 'hydra-dired/body))
 
 ;; =============================================================================
-;; BACKUP AND VERSION CONTROL SYSTEM
+;; BACKUP
 ;; =============================================================================
 
 ;; Don't save anything or create lock/history/backup files.
@@ -493,6 +496,10 @@ T - tag prefix
 (setq make-backup-files nil)
 (setq auto-save-default nil)
 (setq auto-save-list-file-prefix nil)
+
+;; =============================================================================
+;; VERSION CONTROL SYSTEM
+;; =============================================================================
 
 ;; Preference VCS over Emacs built-in backups tools.
 (setq version-control t)
@@ -505,10 +512,8 @@ T - tag prefix
 (setq ediff-window-setup-function #'ediff-setup-windows-plain)
 
 ;; -----------------------------------------------------------------------------
-;; `Magit': A Git Porcelain inside Emacs. Magit is an interface to the
+;; Magit: A Git Porcelain inside Emacs. Magit is an interface to the
 ;; version control system Git, implemented as an Emacs package.
-;;
-;; `source': <https://magit.vc/>
 ;; -----------------------------------------------------------------------------
 
 (use-package magit
@@ -524,9 +529,7 @@ T - tag prefix
 ;; =============================================================================
 
 ;; -----------------------------------------------------------------------------
-;; `exec-path-from-shell': Make Emacs use the $PATH set up by the user's shell.
-;;
-;; `source': <https://github.com/purcell/exec-path-from-shell>
+;; exec-path-from-shell: Make Emacs use the $PATH set up by the user's shell.
 ;; -----------------------------------------------------------------------------
 
 (when (eq system-type 'darwin)
@@ -537,13 +540,11 @@ T - tag prefix
     (exec-path-from-shell-initialize)))
 
 ;; =============================================================================
-;; CLOJURE/CLOJURESCRIPT
+;; FILETYPE
 ;; =============================================================================
 
 ;; -----------------------------------------------------------------------------
-;; `Clojure':
-;;
-;; `source': <https://clojure.org/>
+;; Clojure/ClojureScript
 ;; -----------------------------------------------------------------------------
 
 ;; Emacs support for the Clojure(Script) programming language.
