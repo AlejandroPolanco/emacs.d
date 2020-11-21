@@ -564,9 +564,7 @@ T - tag prefix
   :config
   (setq cider-repl-history-file (concat user-data-dir "cider-repl-history"))
   (setq cider-eldoc-display-for-symbol-at-point t)
-  (setq cider-repl-result-prefix ";; => ")
-  ;; Auto-scrolling the REPL on Output. 
-  (add-hook 'cider-repl-mode-hook '(lambda () (setq scroll-conservatively 101))))
+  (setq cider-repl-result-prefix ";; => "))
 
 ;; Hydras for CIDER.
 (use-package cider-hydra
