@@ -1,7 +1,7 @@
 ;;; init.el --- Emacs Initialization -*- lexical-binding: t; -*-
 ;;
-;;  Author: Alejandro Polanco <apolanco.sosa@gmail.com>
-;;  URL:    <https://github.com/AlejandroPolanco/emacs.d>
+;; Author: Alejandro Polanco <apolanco.sosa@gmail.com>
+;; URL:    <https://github.com/AlejandroPolanco/emacs.d>
 ;;
 ;;; Commentary:
 ;; A basic monolithic configuration.
