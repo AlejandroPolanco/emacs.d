@@ -31,9 +31,9 @@
 ;; Source: <https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org>
 ;; From: How does Doom start up so quickly?
 
+;; If experience freezing, decrease this, if experience stuttering, increase this.
 (defvar user/gc-cons-threshold 16777216     ; 16 mb
-  "The default value to use for `gc-cons-threshold'. If experience freezing, 
-decrease this, if experience stuttering, increase this.")
+  "The default value to use for `gc-cons-threshold'.")
 
 ;; Avoid garbage collection at startup by increasing the value
 ;; of `gc-cons-threshold' to defer it.
@@ -94,10 +94,10 @@ decrease this, if experience stuttering, increase this.")
 ;; Don't add that custom-set-variables block to init.
 (advice-add #'package--ensure-init-file :override #'ignore)
 
-;; Tell package.el where to store Emacs Lisp code. 
+;; Tell package.el where to store Emacs Lisp code.
 (setq package-user-dir (concat user-data-dir "elpa/"))
 
-;; Adding a list of repositories. 
+;; Adding a list of repositories.
 (setq package-archives '(("org"   . "http://orgmode.org/elpa/")
                          ("gnu"   . "http://elpa.gnu.org/packages/")
                          ("melpa" . "https://melpa.org/packages/")))
@@ -180,7 +180,7 @@ decrease this, if experience stuttering, increase this.")
                     :width  'normal)
 
 ;; inhibit frames from resizing when the fonts are larger (or smaller)
-;; that the system default. 
+;; that the system default.
 (setq frame-inhibit-implied-resize t)
 
 ;; Don’t compact font caches during garbage collection.
@@ -295,7 +295,7 @@ decrease this, if experience stuttering, increase this.")
 ;; =============================================================================
 
 ;; Better super/meta keys position on Apple.
-;; Source: <https://emacs.stackexchange.com/questions/26616> 
+;; Source: <https://emacs.stackexchange.com/questions/26616>
 (when (eq system-type 'darwin)
   (setq mac-control-modifier nil)
   (setq mac-option-modifier  'meta)
@@ -359,7 +359,7 @@ decrease this, if experience stuttering, increase this.")
   :ensure nil
   :defer 1
   :hook (prog-mode-hook . show-paren-mode)
-  :config 
+  :config
   (setq show-paren-delay 0.1)
   (setq show-paren-highlight-openparen t)
   (setq show-paren-when-point-inside-paren t)
@@ -545,6 +545,58 @@ T - tag prefix
   (setq transient-history-file (concat user-data-dir "transient/history")))
 
 ;; =============================================================================
+;; CHECKERS
+;; =============================================================================
+
+(use-package flycheck
+  :diminish
+  :hook (prog-mode . flycheck-mode)
+  :init
+  (progn
+    (define-fringe-bitmap 'my-flycheck-fringe-indicator
+      (vector #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00011100
+              #b00111110
+              #b00111110
+              #b00111110
+              #b00011100
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000))
+
+    (flycheck-define-error-level 'error
+      :severity 2
+      :overlay-category 'flycheck-error-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-error)
+
+    (flycheck-define-error-level 'warning
+      :severity 1
+      :overlay-category 'flycheck-warning-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-warning)
+
+    (flycheck-define-error-level 'info
+      :severity 0
+      :overlay-category 'flycheck-info-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-info))
+
+  (setq flycheck-display-errors-delay 0.25)
+  (setq flycheck-indication-mode 'right-fringe)
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (global-flycheck-mode 1))
+
+
+;; =============================================================================
 ;; FILETYPE
 ;; =============================================================================
 
@@ -558,7 +610,7 @@ T - tag prefix
          ("\\.cljc\\'" . clojure-mode)
          ("\\.cljs\\'" . clojurescript-mode)))
 
-;; The Clojure Interactive Development Environment that Rocks for Emacs 
+;; The Clojure Interactive Development Environment that Rocks for Emacs
 (use-package cider
   :after (clojure-mode)
   :config
@@ -583,7 +635,6 @@ T - tag prefix
 (use-package python
   :config
   (setq tab-width 4)
-  (setq python-indent 4)
   (setq python-indent-offset 4)
   (setq python-indent-guess-indent-offset-verbose nil)
 
