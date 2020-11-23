@@ -545,58 +545,6 @@ T - tag prefix
   (setq transient-history-file (concat user-data-dir "transient/history")))
 
 ;; =============================================================================
-;; CHECKERS
-;; =============================================================================
-
-(use-package flycheck
-  :diminish
-  :hook (prog-mode . flycheck-mode)
-  :init
-  (progn
-    (define-fringe-bitmap 'my-flycheck-fringe-indicator
-      (vector #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00011100
-              #b00111110
-              #b00111110
-              #b00111110
-              #b00011100
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000))
-
-    (flycheck-define-error-level 'error
-      :severity 2
-      :overlay-category 'flycheck-error-overlay
-      :fringe-bitmap 'my-flycheck-fringe-indicator
-      :fringe-face 'flycheck-fringe-error)
-
-    (flycheck-define-error-level 'warning
-      :severity 1
-      :overlay-category 'flycheck-warning-overlay
-      :fringe-bitmap 'my-flycheck-fringe-indicator
-      :fringe-face 'flycheck-fringe-warning)
-
-    (flycheck-define-error-level 'info
-      :severity 0
-      :overlay-category 'flycheck-info-overlay
-      :fringe-bitmap 'my-flycheck-fringe-indicator
-      :fringe-face 'flycheck-fringe-info))
-
-  (setq flycheck-display-errors-delay 0.25)
-  (setq flycheck-indication-mode 'right-fringe)
-  (setq flycheck-check-syntax-automatically '(save mode-enabled))
-  (global-flycheck-mode 1))
-
-
-;; =============================================================================
 ;; FILETYPE
 ;; =============================================================================
 
@@ -646,39 +594,6 @@ T - tag prefix
    ((executable-find "python2")
     (setq python-shell-interpreter "python2"))
    (t
-    (setq python-shell-interpreter "python")))
-
-  (defun python-use-correct-flycheck-executables ()
-    "Use the correct Python executables for Flycheck."
-    (let ((executable python-shell-interpreter))
-      (save-excursion
-        (goto-char (point-min))
-        (save-match-data
-          (when (or (looking-at "#!/usr/bin/env \\(python[^ \n]+\\)")
-                    (looking-at "#!\\([^ \n]+/python[^ \n]+\\)"))
-            (setq executable (substring-no-properties (match-string 1))))))
-      ;; Try to compile using the appropriate version of Python for
-      ;; the file.
-      (setq-local flycheck-python-pycompile-executable executable)
-      ;; We might be running inside a virtualenv, in which case the
-      ;; modules won't be available. But calling the executables
-      ;; directly will work.
-      (setq-local flycheck-python-pylint-executable "pylint")
-      (setq-local flycheck-python-flake8-executable "flake8")))
-
-  (add-hook 'python-mode-hook #'python-use-correct-flycheck-executables))
-
-;; Use the python black package to reformat your python buffers.
-(use-package blacken
-  :hook (python-mode-hook . blacken-mode))
-
-;; Python virtual environment interface for Emacs.
-(use-package pyvenv
-  :after (python)
-  :config
-  (add-hook 'python-mode-local-vars-hook #'pyvenv-track-virtualenv)
-  (add-to-list 'global-mode-string
-               '(pyvenv-virtual-env-name (" venv:" pyvenv-virtual-env-name " "))
-               'append))
+    (setq python-shell-interpreter "python"))))
 
 ;;; init.el ends here
