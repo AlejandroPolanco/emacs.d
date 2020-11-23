@@ -423,6 +423,20 @@ decrease this, if experience stuttering, increase this.")
   (setq compilation-scroll-output 'first-error))
 
 ;; =============================================================================
+;; SHELL
+;; =============================================================================
+
+;; -----------------------------------------------------------------------------
+;; exec-path-from-shell: Make Emacs use the $PATH set up by the user's shell.
+;; -----------------------------------------------------------------------------
+(when (eq system-type 'darwin)
+  (use-package exec-path-from-shell
+    :demand t
+    :config
+    (setq exec-path-from-shell-variables '("PATH" "PYTHONPATH"))
+    (exec-path-from-shell-initialize)))
+
+;; =============================================================================
 ;; DIRECTORY EDITOR
 ;; =============================================================================
 
@@ -529,20 +543,6 @@ T - tag prefix
   (setq transient-levels-file  (concat user-data-dir "transient/levels"))
   (setq transient-values-file  (concat user-data-dir "transient/values"))
   (setq transient-history-file (concat user-data-dir "transient/history")))
-
-;; =============================================================================
-;; SHELL
-;; =============================================================================
-
-;; -----------------------------------------------------------------------------
-;; exec-path-from-shell: Make Emacs use the $PATH set up by the user's shell.
-;; -----------------------------------------------------------------------------
-(when (eq system-type 'darwin)
-  (use-package exec-path-from-shell
-    :demand t
-    :config
-    (setq exec-path-from-shell-variables '("PATH"))
-    (exec-path-from-shell-initialize)))
 
 ;; =============================================================================
 ;; FILETYPE
