@@ -575,4 +575,59 @@ T - tag prefix
   ;; "C-c M-r" => cider-hydra-repl/body
   (add-hook 'clojure-mode-hook #'cider-hydra-mode))
 
+;; -----------------------------------------------------------------------------
+;; Python
+;; -----------------------------------------------------------------------------
+
+;; Built-in major mode for Python.
+(use-package python
+  :config
+  (setq tab-width 4)
+  (setq python-indent 4)
+  (setq python-indent-offset 4)
+  (setq python-indent-guess-indent-offset-verbose nil)
+
+  ;; Default to Python 3. Prefer the versioned Python binaries since
+  ;; some systems stupidly make the unversioned one point at Python 2.
+  (cond
+   ((executable-find "python3")
+    (setq python-shell-interpreter "python3"))
+   ((executable-find "python2")
+    (setq python-shell-interpreter "python2"))
+   (t
+    (setq python-shell-interpreter "python")))
+
+  (defun python-use-correct-flycheck-executables ()
+    "Use the correct Python executables for Flycheck."
+    (let ((executable python-shell-interpreter))
+      (save-excursion
+        (goto-char (point-min))
+        (save-match-data
+          (when (or (looking-at "#!/usr/bin/env \\(python[^ \n]+\\)")
+                    (looking-at "#!\\([^ \n]+/python[^ \n]+\\)"))
+            (setq executable (substring-no-properties (match-string 1))))))
+      ;; Try to compile using the appropriate version of Python for
+      ;; the file.
+      (setq-local flycheck-python-pycompile-executable executable)
+      ;; We might be running inside a virtualenv, in which case the
+      ;; modules won't be available. But calling the executables
+      ;; directly will work.
+      (setq-local flycheck-python-pylint-executable "pylint")
+      (setq-local flycheck-python-flake8-executable "flake8")))
+
+  (add-hook 'python-mode-hook #'python-use-correct-flycheck-executables))
+
+;; Use the python black package to reformat your python buffers.
+(use-package blacken
+  :hook (python-mode-hook . blacken-mode))
+
+;; Python virtual environment interface for Emacs.
+(use-package pyvenv
+  :after (python)
+  :config
+  (add-hook 'python-mode-local-vars-hook #'pyvenv-track-virtualenv)
+  (add-to-list 'global-mode-string
+               '(pyvenv-virtual-env-name (" venv:" pyvenv-virtual-env-name " "))
+               'append))
+
 ;;; init.el ends here
