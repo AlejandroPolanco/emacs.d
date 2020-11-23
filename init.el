@@ -586,6 +586,9 @@ T - tag prefix
   (setq python-indent-offset 4)
   (setq python-indent-guess-indent-offset-verbose nil)
 
+  ;; Style used to fill docstrings.
+  (setq python-fill-docstring-style 'symmetric)
+
   ;; Default to Python 3. Prefer the versioned Python binaries since
   ;; some systems stupidly make the unversioned one point at Python 2.
   (cond
@@ -595,5 +598,36 @@ T - tag prefix
     (setq python-shell-interpreter "python2"))
    (t
     (setq python-shell-interpreter "python"))))
+
+;; -----------------------------------------------------------------------------
+;; Org-mode
+;; -----------------------------------------------------------------------------
+
+(use-package org
+  :hook (org-mode-hook . (lambda () (show-paren-mode -1)))
+  :config
+  ;; Blocks
+  (setq org-ellipsis " ⤵")
+  (setq org-hide-block-startup t)
+  ;; Markers
+  (setq org-hide-emphasis-markers t)
+  (setq org-catch-invisible-edits 'show)
+  ;; List
+  (setq org-list-allow-alphabetical t)
+  ;; Leading stars
+  (setq org-hide-leading-stars t)
+  (setq org-hide-leading-stars-before-indent-mode t)
+  ;; Fontify
+  (setq org-return-follows-link t)
+  (setq org-fontify-done-headline t)
+  (setq org-fontify-quote-and-verse-blocks t)
+  ;; Source code blocks
+  (setq org-src-fontify-natively t)
+  (setq org-src-tab-acts-natively t)
+  (setq org-src-preserve-indentation t)
+  (setq org-edit-src-content-indentation 0)
+  ;; Checkbox behavior
+  (setq org-enforce-todo-dependencies t)
+  (setq org-enforce-todo-checkbox-dependencies t))
 
 ;;; init.el ends here
