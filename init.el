@@ -333,7 +333,7 @@
 ;; =============================================================================
 
 ;; -----------------------------------------------------------------------------
-;; modus-operandi: Accessible themes for GNU Emacs, conforming with the highest
+;; modus-themes: Accessible themes for GNU Emacs, conforming with the highest
 ;; accessibility standard for colour contrast between background and foreground
 ;; values (WCAG AAA).
 ;; -----------------------------------------------------------------------------
