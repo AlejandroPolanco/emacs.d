@@ -337,7 +337,7 @@
 ;; accessibility standard for colour contrast between background and foreground
 ;; values (WCAG AAA).
 ;; -----------------------------------------------------------------------------
-(use-package modus-operandi-theme
+(use-package modus-themes
   :demand t
   :config (load-theme 'modus-operandi t))
 
@@ -547,33 +547,6 @@ T - tag prefix
 ;; =============================================================================
 ;; FILETYPE
 ;; =============================================================================
-
-;; -----------------------------------------------------------------------------
-;; Clojure/ClojureScript
-;; -----------------------------------------------------------------------------
-
-;; Emacs support for the Clojure(Script) programming language.
-(use-package clojure-mode
-  :mode (("\\.clj\\'"  . clojure-mode)
-         ("\\.cljc\\'" . clojure-mode)
-         ("\\.cljs\\'" . clojurescript-mode)))
-
-;; The Clojure Interactive Development Environment that Rocks for Emacs
-(use-package cider
-  :after (clojure-mode)
-  :config
-  (setq cider-repl-history-file (concat user-data-dir "cider-repl-history"))
-  (setq cider-eldoc-display-for-symbol-at-point t)
-  (setq cider-repl-result-prefix ";; => "))
-
-;; Hydras for CIDER.
-(use-package cider-hydra
-  :init
-  ;; "C-c C-d" => cider-hydra-doc/body
-  ;; "C-c C-t" => cider-hydra-test/body
-  ;; "C-c M-t" => cider-hydra-test/body
-  ;; "C-c M-r" => cider-hydra-repl/body
-  (add-hook 'clojure-mode-hook #'cider-hydra-mode))
 
 ;; -----------------------------------------------------------------------------
 ;; Python
