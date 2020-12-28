@@ -433,7 +433,7 @@
   (use-package exec-path-from-shell
     :demand t
     :config
-    (setq exec-path-from-shell-variables '("PATH" "PYTHONPATH"))
+    (setq exec-path-from-shell-variables '("PATH"))
     (exec-path-from-shell-initialize)))
 
 ;; =============================================================================
