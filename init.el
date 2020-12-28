@@ -549,30 +549,6 @@ T - tag prefix
 ;; =============================================================================
 
 ;; -----------------------------------------------------------------------------
-;; Python
-;; -----------------------------------------------------------------------------
-
-;; Built-in major mode for Python.
-(use-package python
-  :config
-  (setq tab-width 4)
-  (setq python-indent-offset 4)
-  (setq python-indent-guess-indent-offset-verbose nil)
-
-  ;; Style used to fill docstrings.
-  (setq python-fill-docstring-style 'symmetric)
-
-  ;; Default to Python 3. Prefer the versioned Python binaries since
-  ;; some systems stupidly make the unversioned one point at Python 2.
-  (cond
-   ((executable-find "python3")
-    (setq python-shell-interpreter "python3"))
-   ((executable-find "python2")
-    (setq python-shell-interpreter "python2"))
-   (t
-    (setq python-shell-interpreter "python"))))
-
-;; -----------------------------------------------------------------------------
 ;; Org-mode
 ;; -----------------------------------------------------------------------------
 
