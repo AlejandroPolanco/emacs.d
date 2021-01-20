@@ -172,12 +172,18 @@
 (prefer-coding-system 'utf-8)
 (setq locale-coding-system 'utf-8)
 
-;; System default font.
+;; Main typeface
 (set-face-attribute 'default nil
                     :family "Fira Code"
                     :height 120
                     :weight 'normal
                     :width  'normal)
+
+;; Proportionately spaced typeface
+(set-face-attribute 'variable-pitch nil :family "Fira Code" :height 1.0)
+
+;; Monospaced typeface
+(set-face-attribute 'fixed-pitch nil :family "Fira Code" :height 1.0)
 
 ;; inhibit frames from resizing when the fonts are larger (or smaller)
 ;; that the system default.
