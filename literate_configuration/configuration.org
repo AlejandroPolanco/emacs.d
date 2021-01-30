@@ -1,25 +1,23 @@
-#+title: EMACS LITERATE CONFIGURATION
-#+author: Alejandro Polanco
-#+email: apolanco.sosa@gmail.com
-#+date: 2021-01-28
-#+DESCRIPTION: My personal Emacs configuration.
+#+TITLE: GNU Emacs configuration
+#+AUTHOR: Alejandro Polanco
+#+EMAIL: apolanco.sosa@gmail.com
+#+DATE: 2021-01-28
 #+PROPERTY: header-args :tangle ~/.emacs.d/configuration.el
+#+STARTUP: indent
 
-* Lexical binding:
+** Initialization:
+*** Lexical binding:
 
-  #+begin_src emacs-lisp
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t; -*-
+#+end_src
 
-;;; -*- lexical-binding: t; -*-  
+*** Startup Optimization:
 
-  #+end_src
-
-* STARTUP OPTIMIZATION:
-
-Source: <https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org>
+|Source |https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org|
 From: How does Doom start up so quickly?
 
 #+begin_src emacs-lisp
-
 ;; If experience freezing, decrease this, if experience stuttering, increase this.
 (defvar user/gc-cons-threshold 16777216     ; 16 mb
   "The default value to use for `gc-cons-threshold'.")
@@ -34,13 +32,11 @@ From: How does Doom start up so quickly?
           (lambda ()
             (setq gc-cons-threshold user/gc-cons-threshold)
             (setq gc-cons-percentage 0.1)))
-
 #+end_src
 
-* DIRECTORY MANAGEMENT:
+*** Directory management:
 
 #+begin_src emacs-lisp
-
 (defconst user-data-dir
   (eval-when-compile (concat (file-truename user-emacs-directory) ".cache/"))
   "Provide a location where Emacs can store static and dynamic data.")
@@ -49,36 +45,29 @@ From: How does Doom start up so quickly?
 (dolist (dir (list user-data-dir))
   (unless (file-directory-p dir)
     (make-directory dir 'parents)))  
-
 #+end_src
 
-* CUSTOM:
+*** custom:
 
 #+begin_src emacs-lisp
-   
 ;; Inhibit the `custom-set-variables' block in the init file.
 (setq custom-file (concat user-data-dir "custom.el"))
 (when (file-exists-p custom-file)
   (load custom-file t t))
-
 #+end_src
 
-* LIBRARIES:
-
+*** libraries:
+Built-in utility libraries that add a wealth of common-lisp inspired
+functions and macros. These libraries will be require by other packages.
 #+begin_src emacs-lisp
-  
-;; Built-in utility libraries that add a wealth of common-lisp inspired
-;; functions and macros. These libraries will be require by other packages.
 (require 'cl-lib)
 (require 'subr-x)
-
 #+end_src
 
-* PACKAGE MANAGEMENT:
-  
+** Package management:
+*** Package:
+Emacs's built-in package management.
 #+begin_src emacs-lisp
-
-;; Emacs's built-in package management.
 (require 'package)
 
 ;; Loads whichever version of the file is newest.
@@ -98,10 +87,15 @@ From: How does Doom start up so quickly?
 (setq package-archives '(("org"   . "http://orgmode.org/elpa/")
                          ("gnu"   . "http://elpa.gnu.org/packages/")
                          ("melpa" . "https://melpa.org/packages/")))
+#+end_src
 
-;; Source: <https://github.com/jwiegley/use-package>
-;; The `use-package' macro allows to isolate package configuration
-;; in the .emacs files in a way that is both performance-oriented and tidy.
+*** Use-package:
+| source | https://github.com/jwiegley/use-package |
+#+begin_quote
+The `use-package' macro allows to isolate package configuration
+in the .emacs files in a way that is both performance-oriented and tidy.
+#+end_quote
+#+begin_src emacs-lisp
 (eval-when-compile
   ;; Ensure that `use-package' and dependencies are installed.
   (unless package--initialized (package-initialize))
@@ -119,10 +113,10 @@ From: How does Doom start up so quickly?
 (setq use-package-always-defer t)
 (setq use-package-always-demand nil)
 (setq use-package-hook-name-suffix nil)
-
 #+end_src
 
-* FRAME AND BUFFER:
+** UI Enhancements:
+*** Frame and buffer:
 
 #+begin_src emacs-lisp
 
@@ -163,93 +157,93 @@ From: How does Doom start up so quickly?
 
 #+end_src
 
-* FONT:
+*** Font:
 
 #+begin_src emacs-lisp
-  
-;; UTF-8 Coding System.
+
+;; utf-8 coding system.
 (when (fboundp 'set-charset-priority)
   (set-charset-priority 'unicode))
 (prefer-coding-system 'utf-8)
 (setq locale-coding-system 'utf-8)
 
-;; Main typeface
+;; main typeface
 (set-face-attribute 'default nil
-                    :family "Fira Code"
+                    :family "fira code"
                     :height 120
                     :weight 'normal
                     :width  'normal)
 
-;; Proportionately spaced typeface
-(set-face-attribute 'variable-pitch nil :family "Fira Code" :height 1.0)
+;; proportionately spaced typeface
+(set-face-attribute 'variable-pitch nil :family "fira code" :height 1.0)
 
-;; Monospaced typeface
-(set-face-attribute 'fixed-pitch nil :family "Fira Code" :height 1.0)
+;; monospaced typeface
+(set-face-attribute 'fixed-pitch nil :family "fira code" :height 1.0)
 
 ;; inhibit frames from resizing when the fonts are larger (or smaller)
 ;; that the system default.
 (setq frame-inhibit-implied-resize t)
 
-;; Don’t compact font caches during garbage collection.
+;; don’t compact font caches during garbage collection.
 (setq inhibit-compacting-font-caches t)
 
 #+end_src
 
-* MINIBUFFER:
+*** Minibuffer:
 
 #+begin_src emacs-lisp
-  
-;; Show Keystrokes in Progress Instantly.
+
+;; show keystrokes in progress instantly.
 (setq echo-keystrokes 0.02)
 
-;; Enable recursive minibuffers.
+;; enable recursive minibuffers.
 (setq enable-recursive-minibuffers t)
 
 ;; keep the point out of the minibuffer.
 (setq minibuffer-prompt-properties
       '(read-only t intangible t cursor-intangible t face minibuffer-prompt))
 
-;; Expand the minibuffer to fit multi-line text displayed in the echo-area.
+;; expand the minibuffer to fit multi-line text displayed in the echo-area.
 (setq max-mini-window-height 0.12)
 (setq resize-mini-windows 'grow-only)
 
-;; Use y / n instead of yes / no.
+;; use y / n instead of yes / no.
 (setq confirm-kill-emacs #'y-or-n-p)
 (fset #'yes-or-no-p #'y-or-n-p)
 
 #+end_src
 
-* CURSOR:
+*** Cursor:
 
 #+begin_src emacs-lisp
 
-;; Less distracting settings.
+;; less distracting settings.
 (blink-cursor-mode -1)
 (setq blink-matching-paren nil)
 
-;; Display the current column number.
+;; display the current column number.
 (setq column-number-mode t)
 
-;; Don't stretch the cursor to fit wide characters.
+;; don't stretch the cursor to fit wide characters.
 (setq x-stretch-cursor nil)
 
-;; Keep cursor at end of lines.
+;; keep cursor at end of lines.
 (setq-default track-eol t)
 (setq-default line-move-visual nil)
 
-;; Inhibit rendering the cursor in non-focused windows.
+;; inhibit rendering the cursor in non-focused windows.
 (setq-default cursor-in-non-selected-windows nil)
 (setq highlight-nonselected-windows nil)  
 
 #+end_src
 
-* SCROLLING:
+*** Scrolling:
 
 #+begin_src emacs-lisp
-  
-;; Source: <https://github.com/MatthewZMD/.emacs.d#smooth-scrolling>
 
-;; Vertical Scroll
+;; source: <https://github.com/matthewzmd/.emacs.d#smooth-scrolling>
+
+;; vertical scroll
 (setq scroll-step 1)
 (setq scroll-margin 0)
 (setq scroll-conservatively 101)
@@ -260,75 +254,92 @@ From: How does Doom start up so quickly?
 (setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))
 (setq mouse-wheel-progressive-speed nil)
 
-;; Horizontal Scroll
+;; horizontal scroll
 (setq hscroll-step 1)
 (setq hscroll-margin 1)
 
 #+end_src
 
-* FRINGE:
+*** Fringe:
 
 #+begin_src emacs-lisp
-  
-;; Make the right fringe 8 pixels wide and the left disappear.
+
+;; make the right fringe 8 pixels wide and the left disappear.
 (fringe-mode '(8 . 8))
 
-;; Reserve the fringe for more useful information.
+;; reserve the fringe for more useful information.
 (setq indicate-empty-lines nil)
 (setq indicate-buffer-boundaries nil)
 
 #+end_src
 
-* GENERAL CODING STYLE:
+*** General coding style:
 
 #+begin_src emacs-lisp
-  
-;; Use spaces for indentation. No hard tabs.
+
+;; use spaces for indentation. no hard tabs.
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
-;; Indent empty string and enable TAB completion.
+;; indent empty string and enable tab completion.
 (setq-default tab-always-indent nil)
 
-;; Convert between tabs and spaces (only tabify initial white-space).
+;; convert between tabs and spaces (only tabify initial white-space).
 (setq tabify-regexp "^\t* [ \t]+")
 
-;; Inhibit wrapping words/lines by default.
+;; inhibit wrapping words/lines by default.
 (setq-default truncate-lines t)
 (setq-default truncate-partial-width-windows nil)
 
-;; Assume that sentences end with one space rather than two.
+;; assume that sentences end with one space rather than two.
 (setq sentence-end-double-space nil)
 
-;; Best practice following the POSIX standard.
+;; best practice following the posix standard.
 ;; <https://stackoverflow.com/questions/729692/>
 (setq require-final-newline t)
 
-;; Make apropos more useful.
-;; <https://www.gnu.org/software/emacs/manual/html_node/emacs/Apropos.html>
+;; make apropos more useful.
+;; <https://www.gnu.org/software/emacs/manual/html_node/emacs/apropos.html>
 (setq apropos-do-all t)
 
 #+end_src
 
-* KEYBINDINGS:
+*** Colorscheme:
+**** Modus-themes:
 
-  #+begin_src emacs-lisp
+#+begin_quote
+Accessible themes for GNU Emacs, conforming with the highest
+accessibility standard for colour contrast between background and foreground
+values (WCAG AAA).
+#+end_quote
 
-;; Better super/meta keys position on Apple.
-;; Source: <https://emacs.stackexchange.com/questions/26616>
+#+begin_src emacs-lisp
+
+(use-package modus-themes
+  :demand t
+  :config (load-theme 'modus-operandi t))  
+
+#+end_src
+
+** Keybindings and Mnemonic interface:
+*** General:
+#+begin_src emacs-lisp
+
+;; better super/meta keys position on apple.
+;; source: <https://emacs.stackexchange.com/questions/26616>
 (when (eq system-type 'darwin)
   (setq mac-control-modifier nil)
   (setq mac-option-modifier  'meta)
   (setq mac-command-modifier 'control))
 
-;; Make ESC quit prompts.
+;; make esc quit prompts.
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)  
 
-  #+end_src
+#+end_src
 
-** WHICH-KEY: 
+*** Which-key: 
 #+begin_quote
-Emacs package that displays available keybindings in popup.
+emacs package that displays available keybindings in popup.
 #+end_quote
 
 #+begin_src emacs-lisp
@@ -348,7 +359,7 @@ Emacs package that displays available keybindings in popup.
 
 #+end_src
 
-** HYDRA:
+*** Hydra:
 #+begin_quote
 This is a package for GNU Emacs that can be used to tie related
 commands into a family of short bindings with a common prefix - a Hydra.
@@ -362,26 +373,10 @@ commands into a family of short bindings with a common prefix - a Hydra.
 
 #+end_src
 
-* COLORSCHEME:
-** MODUS-THEMES:
-#+begin_quote
-Accessible themes for GNU Emacs, conforming with the highest
-accessibility standard for colour contrast between background and foreground
-values (WCAG AAA).
-#+end_quote
+** Built-in packages:
 
 #+begin_src emacs-lisp
 
-(use-package modus-themes
-  :demand t
-  :config (load-theme 'modus-operandi t))  
-
-#+end_src
-
-* BUILT-IN PACKAGES:
-
-#+begin_src emacs-lisp
-  
 ;; Keep track of last point place to resume editing in the same file.
 (use-package saveplace
   :ensure nil
@@ -434,9 +429,9 @@ values (WCAG AAA).
   (setq savehist-save-minibuffer-history t)
   (setq savehist-autosave-interval 60)
   (setq savehist-additional-variables
-   '(kill-ring                   ; persist clipboard
-     search-ring                 ; persist searches
-     regexp-search-ring))
+        '(kill-ring                   ; persist clipboard
+          search-ring                 ; persist searches
+          regexp-search-ring))
   (savehist-mode 1))
 
 ;; Display function signatures or contextual metadata.
@@ -461,8 +456,8 @@ values (WCAG AAA).
 
 #+end_src
 
-* SHELL:
-** EXEC-PATH-FROM-SHELL:
+** Terminals & Shells:
+*** Exec-path-from-shell:
 #+begin_quote
 Make Emacs use the $PATH set up by the user's shell.
 #+end_quote
@@ -478,7 +473,8 @@ Make Emacs use the $PATH set up by the user's shell.
 
 #+end_src
 
-* DIRECTORY EDITOR:
+** Project management:
+*** Dired:
 
 #+begin_src emacs-lisp
 
@@ -551,7 +547,7 @@ T - tag prefix
 
 #+end_src
 
-* BACKUP:
+** Backup:
 
 #+begin_src emacs-lisp
 
@@ -564,10 +560,10 @@ T - tag prefix
 
 #+end_src
 
-** VERSION CONTROL SYSTEM:
+*** Version control system:
 
 #+begin_src emacs-lisp
-   
+
 ;; Preference VCS over Emacs built-in backups tools.
 (setq version-control t)
 (setq vc-follow-symlinks t)
@@ -580,7 +576,7 @@ T - tag prefix
 
 #+end_src
 
-** MAGIT:
+**** Magit:
 #+begin_quote
 A Git Porcelain inside Emacs. Magit is an interface to the
 version control system Git, implemented as an Emacs package.
@@ -598,8 +594,10 @@ version control system Git, implemented as an Emacs package.
 
 #+end_src
 
-* FILETYPE:
-** ORG-MODE:
+** Programming languages:
+*** Clojure:
+*** Python:
+*** Org-mode:
 #+begin_quote
 Org mode is for keeping notes, maintaining to-do lists, planning projects,
 authoring documents, computational notebooks, literate programming and more,
@@ -651,12 +649,12 @@ in a fast and effective plain text system.
 
 #+end_src
 
-*** AUTO TANGLE CONFIGURATION FILE 
+**** Auto tangle configuration file:
 
 #+begin_src emacs-lisp
 
 (defun efs/org-babel-tangle-config ()
-"Automatically tangle our Emacs.org config file when we save it."
+  "Automatically tangle our Emacs.org config file when we save it."
   (when (string-equal (buffer-file-name)
                       (expand-file-name "~/.emacs.d/literate_configuration/configuration.org"))
     ;;Dynamic scoping to the rescue.
