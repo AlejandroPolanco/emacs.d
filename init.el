@@ -1,8 +1,9 @@
 ;;; init.el --- Emacs Initialization -*- lexical-binding: t; -*-
 ;;
-;;; Commentary:
 ;; Author: Alejandro Polanco <apolanco.sosa@gmail.com>
-;; URL:    <https://github.com/AlejandroPolanco/emacs.d>
+;; URL:    https://github.com/AlejandroPolanco/emacs.d
+;;
+;;; Commentary:
 ;;
 ;;; This file is not part of GNU Emacs.
 ;;
@@ -26,8 +27,9 @@
 (require 'org)
 
 ;; Load main configuration.
-(if (file-exists-p (expand-file-name "configuration.el" user-emacs-directory))
-     (load-file (expand-file-name "configuration.el" user-emacs-directory))
-   (org-babel-load-file (expand-file-name (concat user-emacs-directory "literate_configuration/configuration.org"))))
+(eval-when-compile
+  (if (file-exists-p (expand-file-name "configuration.el" user-emacs-directory))
+      (load-file (expand-file-name "configuration.el" user-emacs-directory))
+    (org-babel-load-file (expand-file-name (concat user-emacs-directory "literate_configuration/configuration.org")))))
 
 ;;; init.el ends here
