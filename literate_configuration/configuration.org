@@ -3,24 +3,64 @@
 #+EMAIL: apolanco.sosa@gmail.com
 #+DATE: 2021-01-28
 #+PROPERTY: header-args :tangle ~/.emacs.d/configuration.el
-#+STARTUP: indent
+
+** Table of content:                                                 :TOC_3:
+  - [[#initialization][Initialization:]]
+    - [[#lexical-binding][Lexical binding]]
+    - [[#startup-optimization][Startup Optimization]]
+    - [[#directory-management][Directory management]]
+    - [[#custom][Custom]]
+    - [[#libraries][Libraries]]
+  - [[#package-management][Package management:]]
+    - [[#package][Package]]
+    - [[#use-package][Use-package]]
+  - [[#ui-enhancements][UI Enhancements:]]
+    - [[#frame-and-buffer][Frame and buffer]]
+    - [[#font][Font]]
+    - [[#minibuffer][Minibuffer]]
+    - [[#cursor][Cursor]]
+    - [[#scrolling][Scrolling]]
+    - [[#fringe][Fringe]]
+    - [[#general-coding-style][General coding style]]
+    - [[#colorscheme][Colorscheme]]
+  - [[#keybindings][Keybindings:]]
+    - [[#global-keybinds][Global keybinds]]
+    - [[#mnemonic-interfaces][Mnemonic interfaces]]
+  - [[#built-in-packages][Built-in packages:]]
+    - [[#saveplace][Saveplace]]
+    - [[#paren-mode][Paren-mode]]
+    - [[#recentf][recentf]]
+    - [[#autorevert][Autorevert]]
+    - [[#savehist][savehist]]
+    - [[#eldoc][Eldoc]]
+    - [[#compile][Compile]]
+  - [[#terminals--shells][Terminals & Shells:]]
+    - [[#exec-path-from-shell][Exec-path-from-shell]]
+  - [[#project-management][Project management:]]
+    - [[#dired][Dired]]
+  - [[#backup][Backup:]]
+    - [[#version-control-system][Version control system]]
+  - [[#programming-languages][Programming languages:]]
+    - [[#org-mode][Org-mode]]
 
 ** Initialization:
-*** Lexical binding:
+
+*** Lexical binding
+
+| source |  [[https://github.com/bbatsov/emacs-lisp-style-guide#source-code-layout--organization][emacs-lisp-style-guide]] |
 
 #+begin_src emacs-lisp
 ;;; -*- lexical-binding: t; -*-
 #+end_src
 
-*** Startup Optimization:
+*** Startup Optimization
 
-|Source |https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org|
-From: How does Doom start up so quickly?
+| source | [[https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly][How does Doom start up so quickly?]] |
 
 #+begin_src emacs-lisp
-;; If experience freezing, decrease this, if experience stuttering, increase this.
 (defvar user/gc-cons-threshold 16777216     ; 16 mb
-  "The default value to use for `gc-cons-threshold'.")
+  "Set a new default value for `gc-cons-threshold',
+if experience freezing, decrease this, if experience stuttering, increase this.")
 
 ;; Avoid garbage collection at startup by increasing the value
 ;; of `gc-cons-threshold' to defer it.
@@ -34,7 +74,7 @@ From: How does Doom start up so quickly?
             (setq gc-cons-percentage 0.1)))
 #+end_src
 
-*** Directory management:
+*** Directory management
 
 #+begin_src emacs-lisp
 (defconst user-data-dir
@@ -47,26 +87,34 @@ From: How does Doom start up so quickly?
     (make-directory dir 'parents)))  
 #+end_src
 
-*** custom:
+*** Custom
+
+Inhibit the =custom-set-variables= block in the init file.
 
 #+begin_src emacs-lisp
-;; Inhibit the `custom-set-variables' block in the init file.
 (setq custom-file (concat user-data-dir "custom.el"))
 (when (file-exists-p custom-file)
   (load custom-file t t))
 #+end_src
 
-*** libraries:
-Built-in utility libraries that add a wealth of common-lisp inspired
+*** Libraries
+
+| source | [[https://github.com/dieggsy/dotfiles/blob/master/emacs/.emacs.d/init.org][dieggsy/dotfiles]] |
+
+Built-in utilities libraries that add a wealth of common-lisp inspired
 functions and macros. These libraries will be require by other packages.
+
 #+begin_src emacs-lisp
 (require 'cl-lib)
 (require 'subr-x)
 #+end_src
 
 ** Package management:
-*** Package:
+
+*** Package
+
 Emacs's built-in package management.
+
 #+begin_src emacs-lisp
 (require 'package)
 
@@ -89,12 +137,14 @@ Emacs's built-in package management.
                          ("melpa" . "https://melpa.org/packages/")))
 #+end_src
 
-*** Use-package:
-| source | https://github.com/jwiegley/use-package |
+*** Use-package
+
+| source | [[https://github.com/jwiegley/use-package][jwiegley/use-package]] |
+
 #+begin_quote
-The `use-package' macro allows to isolate package configuration
-in the .emacs files in a way that is both performance-oriented and tidy.
+A use-package declaration for simplifying your .emacs 
 #+end_quote
+
 #+begin_src emacs-lisp
 (eval-when-compile
   ;; Ensure that `use-package' and dependencies are installed.
@@ -116,10 +166,10 @@ in the .emacs files in a way that is both performance-oriented and tidy.
 #+end_src
 
 ** UI Enhancements:
-*** Frame and buffer:
+
+*** Frame and buffer
 
 #+begin_src emacs-lisp
-
 ;; A simple frame title.
 (setq frame-title-format '("Emacs"))
 
@@ -139,6 +189,7 @@ in the .emacs files in a way that is both performance-oriented and tidy.
 (setq inhibit-startup-screen t)
 (setq inhibit-startup-message t)
 (setq inhibit-startup-echo-area-message t)
+
 ;; Inhibit the "For information about GNU Emacs..." message at startup.
 (advice-add #'display-startup-echo-area-message :override #'ignore)
 
@@ -154,13 +205,11 @@ in the .emacs files in a way that is both performance-oriented and tidy.
 ;; Disable bell (both visual and audible).
 (setq ring-bell-function #'ignore)
 (setq visible-bell nil)
-
 #+end_src
 
-*** Font:
+*** Font
 
 #+begin_src emacs-lisp
-
 ;; utf-8 coding system.
 (when (fboundp 'set-charset-priority)
   (set-charset-priority 'unicode))
@@ -186,13 +235,11 @@ in the .emacs files in a way that is both performance-oriented and tidy.
 
 ;; don’t compact font caches during garbage collection.
 (setq inhibit-compacting-font-caches t)
-
 #+end_src
 
-*** Minibuffer:
+*** Minibuffer
 
 #+begin_src emacs-lisp
-
 ;; show keystrokes in progress instantly.
 (setq echo-keystrokes 0.02)
 
@@ -210,13 +257,11 @@ in the .emacs files in a way that is both performance-oriented and tidy.
 ;; use y / n instead of yes / no.
 (setq confirm-kill-emacs #'y-or-n-p)
 (fset #'yes-or-no-p #'y-or-n-p)
-
 #+end_src
 
-*** Cursor:
+*** Cursor
 
 #+begin_src emacs-lisp
-
 ;; less distracting settings.
 (blink-cursor-mode -1)
 (setq blink-matching-paren nil)
@@ -233,16 +278,14 @@ in the .emacs files in a way that is both performance-oriented and tidy.
 
 ;; inhibit rendering the cursor in non-focused windows.
 (setq-default cursor-in-non-selected-windows nil)
-(setq highlight-nonselected-windows nil)  
-
+(setq highlight-nonselected-windows nil)
 #+end_src
 
-*** Scrolling:
+*** Scrolling
+
+| source | [[https://github.com/matthewzmd/.emacs.d#smooth-scrolling][matthewzmd/.emacs.d#smooth-scrolling]] |
 
 #+begin_src emacs-lisp
-
-;; source: <https://github.com/matthewzmd/.emacs.d#smooth-scrolling>
-
 ;; vertical scroll
 (setq scroll-step 1)
 (setq scroll-margin 0)
@@ -257,26 +300,22 @@ in the .emacs files in a way that is both performance-oriented and tidy.
 ;; horizontal scroll
 (setq hscroll-step 1)
 (setq hscroll-margin 1)
-
 #+end_src
 
-*** Fringe:
+*** Fringe
 
 #+begin_src emacs-lisp
-
 ;; make the right fringe 8 pixels wide and the left disappear.
 (fringe-mode '(8 . 8))
 
 ;; reserve the fringe for more useful information.
 (setq indicate-empty-lines nil)
 (setq indicate-buffer-boundaries nil)
-
 #+end_src
 
-*** General coding style:
+*** General coding style
 
 #+begin_src emacs-lisp
-
 ;; use spaces for indentation. no hard tabs.
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
@@ -298,33 +337,35 @@ in the .emacs files in a way that is both performance-oriented and tidy.
 ;; <https://stackoverflow.com/questions/729692/>
 (setq require-final-newline t)
 
-;; make apropos more useful.
 ;; <https://www.gnu.org/software/emacs/manual/html_node/emacs/apropos.html>
+;; Make apropos more useful.
 (setq apropos-do-all t)
-
 #+end_src
 
-*** Colorscheme:
-**** Modus-themes:
+*** Colorscheme
+
+**** Modus-themes
+
+| source | [[https://protesilaos.com/modus-themes/][protesilaos/modus-themes]] |
 
 #+begin_quote
 Accessible themes for GNU Emacs, conforming with the highest
-accessibility standard for colour contrast between background and foreground
-values (WCAG AAA).
+accessibility standard for colour contrast between background
+and foreground values (WCAG AAA).
 #+end_quote
 
 #+begin_src emacs-lisp
-
 (use-package modus-themes
   :demand t
-  :config (load-theme 'modus-operandi t))  
-
+  :init (setq modus-themes-org-blocks 'grayscale)
+  :config (load-theme 'modus-operandi t))
 #+end_src
 
-** Keybindings and Mnemonic interface:
-*** General:
-#+begin_src emacs-lisp
+** Keybindings:
 
+*** Global keybinds
+
+#+begin_src emacs-lisp
 ;; better super/meta keys position on apple.
 ;; source: <https://emacs.stackexchange.com/questions/26616>
 (when (eq system-type 'darwin)
@@ -334,16 +375,19 @@ values (WCAG AAA).
 
 ;; make esc quit prompts.
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)  
-
 #+end_src
 
-*** Which-key: 
+*** Mnemonic interfaces
+
+**** Which-key 
+
+| source | [[https://github.com/justbur/emacs-which-key][justbur/emacs-which-key]] |
+
 #+begin_quote
 emacs package that displays available keybindings in popup.
 #+end_quote
 
 #+begin_src emacs-lisp
-
 (use-package which-key
   :defer 1
   :diminish
@@ -356,28 +400,33 @@ emacs package that displays available keybindings in popup.
   (set-face-attribute 'which-key-local-map-description-face nil :weight 'bold)
   (which-key-setup-side-window-bottom)
   (which-key-mode 1))
-
 #+end_src
 
-*** Hydra:
+**** Hydra
+
+| source | [[https://github.com/abo-abo/hydra][abo-abo/hydra]] | 
+
 #+begin_quote
-This is a package for GNU Emacs that can be used to tie related
-commands into a family of short bindings with a common prefix - a Hydra.
+Make Emacs bindings that stick around.
 #+end_quote
 
 #+begin_src emacs-lisp
-
 (use-package hydra
   :defer 1
   :diminish)
-
 #+end_src
 
 ** Built-in packages:
 
-#+begin_src emacs-lisp
+*** Saveplace
 
-;; Keep track of last point place to resume editing in the same file.
+#+begin_quote
+Automatically save place in files, so that visiting them later
+(even during a different Emacs session) automatically moves point
+to the saved position, when the file is first found.
+#+end_quote
+
+#+begin_src emacs-lisp
 (use-package saveplace
   :ensure nil
   :demand t
@@ -385,8 +434,16 @@ commands into a family of short bindings with a common prefix - a Hydra.
   (setq save-place-file (concat user-data-dir "saveplace"))
   (setq save-place-limit 100)
   (save-place-mode 1))
+#+end_src
 
-;; highlight matching delimiters.
+*** Paren-mode
+
+#+begin_quote
+It will display highlighting on whatever paren matches the one before or 
+after point.
+#+end_quote
+
+#+begin_src emacs-lisp
 (use-package paren
   :ensure nil
   :defer 1
@@ -396,8 +453,16 @@ commands into a family of short bindings with a common prefix - a Hydra.
   (setq show-paren-highlight-openparen t)
   (setq show-paren-when-point-inside-paren t)
   (setq show-paren-when-point-in-periphery t))
+#+end_src
 
-;; Keep track of recently opened files.
+*** recentf
+
+#+begin_quote
+This package maintains a menu for visiting files that were operated
+on recently
+#+end_quote
+
+#+begin_src emacs-lisp
 (use-package recentf
   :ensure nil
   :defer 1
@@ -407,8 +472,16 @@ commands into a family of short bindings with a common prefix - a Hydra.
   (setq recentf-max-saved-items 300)
   (setq recentf-max-menu-items 0)
   (recentf-mode 1))
+#+end_src
 
-;; Revert buffers when underlying files change.
+*** Autorevert
+
+#+begin_quote
+... Automatically revert buffers whenever the corresponding files have been 
+changed on disk and the buffer contains no unsaved changes
+#+end_quote
+
+#+begin_src emacs-lisp
 (use-package autorevert
   :ensure nil
   :defer 1
@@ -419,8 +492,17 @@ commands into a family of short bindings with a common prefix - a Hydra.
   (setq auto-revert-check-vc-info t)
   (setq revert-without-query (list "."))
   (global-auto-revert-mode 1))
+#+end_src
 
-;; Persist history.
+*** savehist
+
+#+begin_quote
+Many editors (e.g. Vim) have the feature of saving minibuffer
+history to an external file after exit. This package provides the
+same feature in Emacs.
+#+end_quote
+
+#+begin_src emacs-lisp
 (use-package savehist
   :ensure nil
   :defer 3
@@ -433,8 +515,17 @@ commands into a family of short bindings with a common prefix - a Hydra.
           search-ring                 ; persist searches
           regexp-search-ring))
   (savehist-mode 1))
+#+end_src
 
-;; Display function signatures or contextual metadata.
+*** Eldoc
+
+#+begin_quote
+This program was inspired by the behavior of the "mouse documentation window" 
+on many Lisp Machine systems, as you type a function's symbol name
+as part of a sexp, it will print the argument list for that function.
+#+end_quote
+
+#+begin_src emacs-lisp
 (use-package eldoc
   :ensure nil
   :defer 5
@@ -444,8 +535,15 @@ commands into a family of short bindings with a common prefix - a Hydra.
   (setq eldoc-idle-delay 0.2)
   (setq eldoc-echo-area-use-multiline-p nil)
   (global-eldoc-mode 1))
+#+end_src
 
-;; Command for compiling files according to major-mode.
+*** Compile
+
+#+begin_quote
+This package provides the compile facilities documented in the Emacs user's manual
+#+end_quote
+
+#+begin_src emacs-lisp
 (use-package compile
   :ensure nil
   :defer 5
@@ -453,31 +551,36 @@ commands into a family of short bindings with a common prefix - a Hydra.
   (setq compilation-always-kill t)
   (setq compilation-ask-about-save nil)
   (setq compilation-scroll-output 'first-error))
-
 #+end_src
 
 ** Terminals & Shells:
-*** Exec-path-from-shell:
+
+*** Exec-path-from-shell
+
+| source | [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] |
+
 #+begin_quote
 Make Emacs use the $PATH set up by the user's shell.
 #+end_quote
 
 #+begin_src emacs-lisp
-
 (when (eq system-type 'darwin)
   (use-package exec-path-from-shell
     :demand t
     :config
     (setq exec-path-from-shell-variables '("PATH"))
     (exec-path-from-shell-initialize)))
-
 #+end_src
 
 ** Project management:
-*** Dired:
+
+*** Dired
+
+#+begin_quote
+This is a major mode for directory browsing and editing.
+#+end_quote
 
 #+begin_src emacs-lisp
-
 (use-package dired
   :ensure nil
   :hook ((dired-mode-hook . auto-revert-mode)
@@ -544,26 +647,22 @@ T - tag prefix
     ("." nil :color blue))
 
   (define-key dired-mode-map "?" 'hydra-dired/body))
-
 #+end_src
 
 ** Backup:
 
 #+begin_src emacs-lisp
-
 ;; Don't save anything or create lock/history/backup files.
 ;; <https://www.emacswiki.org/emacs/BackupDirectory>
 (setq create-lockfiles nil)
 (setq make-backup-files nil)
 (setq auto-save-default nil)
-(setq auto-save-list-file-prefix nil)  
-
+(setq auto-save-list-file-prefix nil)
 #+end_src
 
-*** Version control system:
+*** Version control system
 
 #+begin_src emacs-lisp
-
 ;; Preference VCS over Emacs built-in backups tools.
 (setq version-control t)
 (setq vc-follow-symlinks t)
@@ -573,17 +672,17 @@ T - tag prefix
 (setq ediff-diff-options "-w")  ; turn off whitespace checking.
 (setq ediff-split-window-function #'split-window-horizontally)
 (setq ediff-window-setup-function #'ediff-setup-windows-plain)
-
 #+end_src
 
-**** Magit:
+**** Magit
+
+| source | [[https://magit.vc/][magit/magit]] |
+
 #+begin_quote
-A Git Porcelain inside Emacs. Magit is an interface to the
-version control system Git, implemented as an Emacs package.
+It's Magit! A Git porcelain inside Emacs.
 #+end_quote
 
 #+begin_src emacs-lisp
-
 (use-package magit
   :defer 1
   :init
@@ -591,23 +690,30 @@ version control system Git, implemented as an Emacs package.
   (setq transient-levels-file  (concat user-data-dir "transient/levels"))
   (setq transient-values-file  (concat user-data-dir "transient/values"))
   (setq transient-history-file (concat user-data-dir "transient/history")))
-
 #+end_src
 
 ** Programming languages:
-*** Clojure:
-*** Python:
-*** Org-mode:
+
+*** Org-mode
+
+| source | [[https://orgmode.org/index.html][bzg/org-mode]] |
+
 #+begin_quote
-Org mode is for keeping notes, maintaining to-do lists, planning projects,
-authoring documents, computational notebooks, literate programming and more,
-in a fast and effective plain text system.
+Org mode is for keeping notes, maintaining TODO lists, planning projects, 
+and authoring documents with a fast and effective plain-text system.
 #+end_quote
 
 #+begin_src emacs-lisp
+(defun user/org-mode-setup ()
+"Create a minimalistic user experience by disabling certain minor settings."
+(org-indent-mode)
+(show-paren-mode -1)
+(setq require-final-newline nil))
+#+end_src
 
+#+begin_src emacs-lisp
 (use-package org
-  :hook (org-mode-hook . (lambda () (show-paren-mode -1)))
+  :hook (org-mode-hook . user/org-mode-setup)
   :config
   ;; Insead of "..." show "…" when there's hidden folded content
   ;; Some characters to choose from: …, ⤵, ▼, ↴, ⬎, ⤷, and ⋱
@@ -641,26 +747,39 @@ in a fast and effective plain text system.
  '((emacs-lisp . t)))
 
 (setq org-confirm-babel-evaluate nil)
+#+end_src
 
+#+begin_src emacs-lisp
 (require 'org-tempo)
 
 (add-to-list 'org-structure-template-alist '("org" . "src org-mode"))
 (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-
 #+end_src
 
-**** Auto tangle configuration file:
+**** Toc-org
+
+| source | [[https://github.com/snosov1/toc-org][snosov1/toc-org]] |
+
+#+begin_quote
+toc-org is an Emacs utility to have an up-to-date table of contents in the org
+files without exporting (useful primarily for readme files on GitHub).
+#+end_quote
 
 #+begin_src emacs-lisp
+(use-package toc-org
+  :hook (org-mode-hook . toc-org-mode))
+#+end_src
 
-(defun efs/org-babel-tangle-config ()
-  "Automatically tangle our Emacs.org config file when we save it."
+**** Auto tangle configuration file
+
+#+begin_src emacs-lisp
+(defun auto-org-babel-tangle-config ()
+  "Automatically tangle our .org config file when we save it."
   (when (string-equal (buffer-file-name)
                       (expand-file-name "~/.emacs.d/literate_configuration/configuration.org"))
     ;;Dynamic scoping to the rescue.
     (let ((org-confirm-babel-evaluate nil))
       (org-babel-tangle))))
 
-(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
-
+(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'auto-org-babel-tangle-config)))
 #+end_src
