@@ -321,10 +321,7 @@ A use-package declaration for simplifying your .emacs
 (setq-default tab-width 4)
 
 ;; indent empty string and enable tab completion.
-(setq-default tab-always-indent nil)
-
-;; convert between tabs and spaces (only tabify initial white-space).
-(setq tabify-regexp "^\t* [ \t]+")
+(setq-default tab-always-indent 'complete)
 
 ;; inhibit wrapping words/lines by default.
 (setq-default truncate-lines t)
