@@ -1,4 +1,4 @@
-;;; early-init.el --- Early Init File -*- lexical-binding: t; -*-
+;;; early-init.el --- Early Initialization File -*- lexical-binding: t; -*-
 
 ;; Author: Alejandro Polanco <apolanco.sosa@gmail.com>
 ;; URL:    https://github.com/AlejandroPolanco/emacs.d
@@ -27,44 +27,38 @@
 
 ;;; Code:
 
-;; =============================================================================
-;; STARTUP AND GARBAGE COLLECTION OPTIMIZATION
-;; =============================================================================
+;; Startup optimization
+
+(defvar user/gc-cons-threshold 16777216     ; 16 mb
+  "Set a new default value for `gc-cons-threshold'.
+If experience freezing, decrease this, if experience stuttering, increase this.")
 
 (defvar user/file-name-handler-alist file-name-handler-alist
-  "The variable `file-name-handler-alist' is consulted on every `require', `load' and
-various path/io functions, but none if these is typically necessary at startup.")
+  "The variable `file-name-handler-alist' is consulted on every `require', `load'
+and various path/io functions, but none if these is typically necessary at startup.")
 
-(defun user/restore-file-name-handler-alist ()
-  "Restore `file-name-handler-alist' because it's needed for core functionality."
-  (setq file-name-handler-alist user/file-name-handler-alist))
-
-;; Avoid garbage collection at startup by increasing the value
-;; of `gc-cons-threshold' to defer it.
+;; Avoid garbage collection at startup by increasing the value of `gc-cons-threshold'.
 (setq gc-cons-threshold most-positive-fixnum)   ; 2^61 bytes
 (setq gc-cons-percentage 0.6)
 
-;; Unset `file-name-handler-alist' temporarily.
+;; Don't attempt to find/apply special file handlers to files loaded during startup.
 (setq file-name-handler-alist nil)
 
-(add-hook 'emacs-startup-hook #'user/restore-file-name-handler-alist)
-
-;; =============================================================================
-;; PACKAGE MANAGEMENT
-;; =============================================================================
-
-;; Package initialization occurs before `user-init-file' is loaded,
-;; but after `early-init-file'.
+;; Make installed packages available when Emacs starts.
 (setq package-enable-at-startup nil)
 
 ;; Don't add that `custom-set-variables' block to init.
-(advice-add #'package--ensure-init-file :override #'ignore)
+(fset #'package--ensure-init-file #'ignore)
 
-;; =============================================================================
-;; UI ENHANCEMENTS
-;; =============================================================================
+;; UI enhancements
 
-;; Prevent the glimpse of un-styled Emacs by setting these early.
+;; The least specialized major mode.
+(setq initial-major-mode 'fundamental-mode)
+
+;; Whether frames should be resized implicitly.
+(setq frame-inhibit-implied-resize t)
+
+;; Disable GUI components early as possible.
 (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
 (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
 (add-to-list 'default-frame-alist '(vertical-scroll-bars))

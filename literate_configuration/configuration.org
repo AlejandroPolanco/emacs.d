@@ -7,7 +7,7 @@
 ** Table of content:                                                 :TOC_3:
   - [[#initialization][Initialization:]]
     - [[#lexical-binding][Lexical binding]]
-    - [[#startup-optimization][Startup Optimization]]
+    - [[#garbage-collection-optimization][Garbage collection Optimization]]
     - [[#directory-management][Directory management]]
     - [[#custom][Custom]]
     - [[#libraries][Libraries]]
@@ -53,20 +53,39 @@
 ;;; -*- lexical-binding: t; -*-
 #+end_src
 
-*** Startup Optimization
+*** Garbage collection Optimization
 
 | source | [[https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly][How does Doom start up so quickly?]] |
 
-#+begin_src emacs-lisp
-(defvar user/gc-cons-threshold 16777216     ; 16 mb
-  "Set a new default value for `gc-cons-threshold',
-if experience freezing, decrease this, if experience stuttering, increase this.")
+**** Startup
 
-;; Reset the garbage collector after init.
+Restore the values of =gc-cons-threshold= and =file-name-handler-alist= after init.
+
+#+begin_src emacs-lisp
 (add-hook 'emacs-startup-hook
           (lambda ()
             (setq gc-cons-threshold user/gc-cons-threshold)
-            (setq gc-cons-percentage 0.1)))
+            (setq gc-cons-percentage 0.1)
+            (setq file-name-handler-alist user/file-name-handler-alist)))
+#+end_src
+
+**** Minibuffer
+
+Raise =gc-cons-threshold= while the minibuffer is active, so the GC doesn’t slow
+down expensive commands.
+
+#+begin_src emacs-lisp
+(defun user/minibuffer-defer-garbage-collection ()
+  "Raise `gc-cons-threshold' while the minibuffer is active,
+this would benefit expensive commands or completion frameworks."
+  (setq gc-cons-threshold most-positive-fixnum))   ; 2^61 bytes
+
+(defun user/minibuffer-restore-garbage-collection ()
+  "Defer it so that commands launched immediately after will enjoy the benefits."
+  (run-at-time 1 nil (lambda () (setq gc-cons-threshold user/gc-cons-threshold))))
+
+(add-hook 'minibuffer-setup-hook #'user/minibuffer-defer-garbage-collection)
+(add-hook 'minibuffer-exit-hook  #'user/minibuffer-restore-garbage-collection)
 #+end_src
 
 *** Directory management
@@ -169,9 +188,6 @@ A use-package declaration for simplifying your .emacs
 (setq frame-resize-pixelwise t)
 (setq window-resize-pixelwise t)
 
-;; The least specialized major mode.
-(setq initial-major-mode 'fundamental-mode)
-
 ;; Minimal startup screen/message.
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-screen t)
@@ -216,10 +232,6 @@ A use-package declaration for simplifying your .emacs
 
 ;; monospaced typeface
 (set-face-attribute 'fixed-pitch nil :family "fira code" :height 1.0)
-
-;; inhibit frames from resizing when the fonts are larger (or smaller)
-;; that the system default.
-(setq frame-inhibit-implied-resize t)
 
 ;; don’t compact font caches during garbage collection.
 (setq inhibit-compacting-font-caches t)
