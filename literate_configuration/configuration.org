@@ -62,11 +62,6 @@
   "Set a new default value for `gc-cons-threshold',
 if experience freezing, decrease this, if experience stuttering, increase this.")
 
-;; Avoid garbage collection at startup by increasing the value
-;; of `gc-cons-threshold' to defer it.
-(setq gc-cons-threshold most-positive-fixnum)   ; 2^61 bytes
-(setq gc-cons-percentage 0.6)
-
 ;; Reset the garbage collector after init.
 (add-hook 'emacs-startup-hook
           (lambda ()
@@ -120,13 +115,6 @@ Emacs's built-in package management.
 
 ;; Loads whichever version of the file is newest.
 (setq load-prefer-newer t)
-
-;; Package initialization occurs before user-init-file is loaded,
-;; but after early-init-file.
-(setq package-enable-at-startup nil)
-
-;; Don't add that custom-set-variables block to init.
-(advice-add #'package--ensure-init-file :override #'ignore)
 
 ;; Tell package.el where to store Emacs Lisp code.
 (setq package-user-dir (concat user-data-dir "elpa/"))
