@@ -22,7 +22,8 @@
     - [[#scrolling][Scrolling]]
     - [[#fringe][Fringe]]
     - [[#general-coding-style][General coding style]]
-    - [[#colorscheme][Colorscheme]]
+  - [[#colorscheme][Colorscheme]]
+    - [[#modus-themes][Modus-themes]]
   - [[#keybindings][Keybindings:]]
     - [[#global-keybinds][Global keybinds]]
     - [[#mnemonic-interfaces][Mnemonic interfaces]]
@@ -189,6 +190,7 @@ A use-package declaration for simplifying your .emacs
 (setq window-resize-pixelwise t)
 
 ;; Minimal startup screen/message.
+(setq inhibit-default-init t)
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-screen t)
 (setq inhibit-startup-message t)
@@ -338,9 +340,9 @@ A use-package declaration for simplifying your .emacs
 (setq apropos-do-all t)
 #+end_src
 
-*** Colorscheme
+** Colorscheme
 
-**** Modus-themes
+*** Modus-themes
 
 | source | [[https://protesilaos.com/modus-themes/][protesilaos/modus-themes]] |
 
@@ -361,15 +363,20 @@ and foreground values (WCAG AAA).
 
 *** Global keybinds
 
+Better super/meta keys position on apple.
+
+| source | [[https://emacs.stackexchange.com/questions/26616][questions/26616]] |
+
 #+begin_src emacs-lisp
-;; better super/meta keys position on apple.
-;; source: <https://emacs.stackexchange.com/questions/26616>
 (when (eq system-type 'darwin)
   (setq mac-control-modifier nil)
   (setq mac-option-modifier  'meta)
   (setq mac-command-modifier 'control))
+#+end_src
 
-;; make esc quit prompts.
+Make =esc= quit prompts.
+
+#+begin_src emacs-lisp
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)  
 #+end_src
 
@@ -455,7 +462,7 @@ after point.
 
 #+begin_quote
 This package maintains a menu for visiting files that were operated
-on recently
+on recently.
 #+end_quote
 
 #+begin_src emacs-lisp
@@ -474,7 +481,7 @@ on recently
 
 #+begin_quote
 ... Automatically revert buffers whenever the corresponding files have been 
-changed on disk and the buffer contains no unsaved changes
+changed on disk and the buffer contains no unsaved changes.
 #+end_quote
 
 #+begin_src emacs-lisp
@@ -536,7 +543,7 @@ as part of a sexp, it will print the argument list for that function.
 *** Compile
 
 #+begin_quote
-This package provides the compile facilities documented in the Emacs user's manual
+This package provides the compile facilities documented in the Emacs user's manual.
 #+end_quote
 
 #+begin_src emacs-lisp
@@ -647,9 +654,11 @@ T - tag prefix
 
 ** Backup:
 
+Don't save anything or create lock/history/backup files.
+
+| source | [[https://www.emacswiki.org/emacs/BackupDirectory][Emacs Wiki]] |
+
 #+begin_src emacs-lisp
-;; Don't save anything or create lock/history/backup files.
-;; <https://www.emacswiki.org/emacs/BackupDirectory>
 (setq create-lockfiles nil)
 (setq make-backup-files nil)
 (setq auto-save-default nil)
@@ -658,13 +667,17 @@ T - tag prefix
 
 *** Version control system
 
+Preference VCS over Emacs built-in backups tools.
+
 #+begin_src emacs-lisp
-;; Preference VCS over Emacs built-in backups tools.
 (setq version-control t)
 (setq vc-follow-symlinks t)
 (setq delete-old-versions t)
+#+end_src
 
-;; Convenient UI to browse through the differences between files or buffers.
+Convenient UI to browse through the differences between files or buffers.
+
+#+begin_src emacs-lisp
 (setq ediff-diff-options "-w")  ; turn off whitespace checking.
 (setq ediff-split-window-function #'split-window-horizontally)
 (setq ediff-window-setup-function #'ediff-setup-windows-plain)
