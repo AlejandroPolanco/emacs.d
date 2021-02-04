@@ -483,6 +483,23 @@ A set of keybindings for evil-mode.
   (evil-collection-init))
 #+end_src
 
+
+**** Evil-matchit
+
+| source | [[https://github.com/redguardtoo/evil-matchit][redguardtoo/evil-matchit]] |
+
+#+begin_quote
+Vim matchit ported into Emacs
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package evil-matchit
+  :demand t
+  :after (evil)
+  :config
+  (global-evil-matchit-mode 1))
+#+end_src
+
 *** Mnemonic interfaces
 
 **** Which-key 
