@@ -381,6 +381,34 @@ Make =esc= quit prompts.
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)  
 #+end_src
 
+**** General
+
+| source | [[https://github.com/noctuid/general.el][noctuid/general.el]] |
+
+#+begin_quote
+More convenient key definitions in emacs
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package general
+  :demand t
+  :config
+  (general-evil-setup t)
+  (general-override-mode)
+
+  ;; The leader prefix key for Evil users.
+  (general-create-definer user/leader-key
+    :states '(normal visual)
+    :keymaps 'override
+    :prefix "SPC")
+
+  ;; An alternative leader prefix key used for Insert and Emacs states.
+  (general-create-definer user/leader-alt-key
+    :states '(insert emacs)
+    :keymaps 'override
+    :non-normal-prefix "M-SPC"))
+#+end_src
+
 *** Modal editing
 
 **** Evil-mode
