@@ -25,7 +25,8 @@
   - [[#colorscheme][Colorscheme]]
     - [[#modus-themes][Modus-themes]]
   - [[#keybindings][Keybindings:]]
-    - [[#global-keybinds][Global keybinds]]
+    - [[#global-settings][Global settings]]
+    - [[#modal-editing][Modal editing]]
     - [[#mnemonic-interfaces][Mnemonic interfaces]]
   - [[#built-in-packages][Built-in packages:]]
     - [[#saveplace][Saveplace]]
@@ -361,7 +362,7 @@ and foreground values (WCAG AAA).
 
 ** Keybindings:
 
-*** Global keybinds
+*** Global settings
 
 Better super/meta keys position on apple.
 
@@ -378,6 +379,80 @@ Make =esc= quit prompts.
 
 #+begin_src emacs-lisp
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)  
+#+end_src
+
+*** Modal editing
+
+**** Evil-mode
+
+| source | [[https://github.com/emacs-evil/evil][emacs-evil/evil]] |
+
+#+begin_quote
+The extensible vi layer for Emacs.
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package evil
+  :demand t
+  ;; :general
+  ;; TODO:
+  ;; (nmap
+  ;;   "j" 'evil-next-visual-line
+  ;;   "k" 'evil-previous-visual-line)
+  :init
+  ;; Needed by evil-collection package.
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  ;; Keybindings and other behaviour.
+  (setq evil-want-C-i-jump t)
+  (setq evil-want-C-u-scroll t)
+  (setq evil-want-C-d-scroll t)
+  (setq evil-want-Y-yank-to-eol t)
+  ;; Miscellaneous
+  (setq evil-esc-delay 0)
+  (setq evil-echo-state t)
+  ;; Cursor movement
+  (setq evil-track-eol t)
+  (setq evil-move-cursor-back nil)
+  ;; Indentation
+  (setq evil-auto-indent t)
+  (setq evil-shift-width 4)
+  (setq evil-shift-round t)
+  (setq evil-indent-convert-tabs t)
+  ;; Window management
+  (setq evil-split-window-below t)
+  (setq evil-vsplit-window-right t)
+  ;; Search
+  (setq evil-symbol-word-search t)
+  (setq evil-ex-visual-char-range t)
+  (setq evil-ex-search-vim-style-regexp t)
+  (setq evil-ex-interactive-search-highlight 'selected-window)
+  :config
+  ;; The initial state of certain mode.
+  (evil-set-initial-state 'help-mode  'motion)
+  (evil-set-initial-state 'nrepl-mode 'insert)
+  (evil-set-initial-state 'dired-mode 'emacs)
+  ;; (evil-set-initial-state 'org-mode 'emacs)
+
+  ;; Allows you to click buttons without initiating a selection.
+  (define-key evil-motion-state-map [down-mouse-1] nil)
+  (evil-mode 1))
+#+end_src
+
+**** Evil-collection
+
+| source | [[https://github.com/emacs-evil/evil-collection][emacs-evil/evil-collection]] |
+
+#+begin_quote
+A set of keybindings for evil-mode.
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package evil-collection
+  :demand t
+  :after (evil)
+  :config
+  (evil-collection-init))
 #+end_src
 
 *** Mnemonic interfaces
@@ -716,7 +791,6 @@ and authoring documents with a fast and effective plain-text system.
 (defun user/org-mode-setup ()
 "Create a minimalistic user experience by disabling certain minor settings."
 (org-indent-mode)
-(show-paren-mode -1)
 (setq require-final-newline nil))
 #+end_src
 
