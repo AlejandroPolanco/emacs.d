@@ -38,10 +38,12 @@
     - [[#compile][Compile]]
   - [[#terminals--shells][Terminals & Shells:]]
     - [[#exec-path-from-shell][Exec-path-from-shell]]
-  - [[#project-management][Project management:]]
-    - [[#dired][Dired]]
   - [[#backup][Backup:]]
     - [[#version-control-system][Version control system]]
+  - [[#project-management][Project management:]]
+    - [[#dired][Dired]]
+  - [[#linters][Linters]]
+    - [[#flycheck][Flycheck]]
   - [[#programming-languages][Programming languages:]]
     - [[#clojure][Clojure]]
     - [[#python][Python]]
@@ -697,6 +699,55 @@ Make Emacs use the $PATH set up by the user's shell.
     (exec-path-from-shell-initialize)))
 #+end_src
 
+** Backup:
+
+Don't save anything or create lock/history/backup files.
+
+| source | [[https://www.emacswiki.org/emacs/BackupDirectory][Emacs Wiki]] |
+
+#+begin_src emacs-lisp
+(setq create-lockfiles nil)
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+(setq auto-save-list-file-prefix nil)
+#+end_src
+
+*** Version control system
+
+Preference VCS over Emacs built-in backups tools.
+
+#+begin_src emacs-lisp
+(setq version-control t)
+(setq vc-follow-symlinks t)
+(setq delete-old-versions t)
+#+end_src
+
+Convenient UI to browse through the differences between files or buffers.
+
+#+begin_src emacs-lisp
+(setq ediff-diff-options "-w")  ; turn off whitespace checking.
+(setq ediff-split-window-function #'split-window-horizontally)
+(setq ediff-window-setup-function #'ediff-setup-windows-plain)
+#+end_src
+
+**** Magit
+
+| source | [[https://magit.vc/][magit/magit]] |
+
+#+begin_quote
+It's Magit! A Git porcelain inside Emacs.
+#+end_quote
+
+#+begin_src emacs-lisp
+(use-package magit
+  :defer 1
+  :init
+  ;; Must be set early to prevent ~/.emacs.d/transient from being created.
+  (setq transient-levels-file  (concat user-data-dir "transient/levels"))
+  (setq transient-values-file  (concat user-data-dir "transient/values"))
+  (setq transient-history-file (concat user-data-dir "transient/history")))
+#+end_src
+
 ** Project management:
 
 *** Dired
@@ -774,53 +825,63 @@ T - tag prefix
   (define-key dired-mode-map "?" 'hydra-dired/body))
 #+end_src
 
-** Backup:
+** Linters
 
-Don't save anything or create lock/history/backup files.
+*** Flycheck
 
-| source | [[https://www.emacswiki.org/emacs/BackupDirectory][Emacs Wiki]] |
-
-#+begin_src emacs-lisp
-(setq create-lockfiles nil)
-(setq make-backup-files nil)
-(setq auto-save-default nil)
-(setq auto-save-list-file-prefix nil)
-#+end_src
-
-*** Version control system
-
-Preference VCS over Emacs built-in backups tools.
-
-#+begin_src emacs-lisp
-(setq version-control t)
-(setq vc-follow-symlinks t)
-(setq delete-old-versions t)
-#+end_src
-
-Convenient UI to browse through the differences between files or buffers.
-
-#+begin_src emacs-lisp
-(setq ediff-diff-options "-w")  ; turn off whitespace checking.
-(setq ediff-split-window-function #'split-window-horizontally)
-(setq ediff-window-setup-function #'ediff-setup-windows-plain)
-#+end_src
-
-**** Magit
-
-| source | [[https://magit.vc/][magit/magit]] |
+| source | [[https://github.com/flycheck/flycheck][flycheck/flycheck]] |
 
 #+begin_quote
-It's Magit! A Git porcelain inside Emacs.
+On the fly syntax checking for GNU Emacs.
 #+end_quote
 
 #+begin_src emacs-lisp
-(use-package magit
-  :defer 1
+(use-package flycheck
+  :diminish
+  :hook (prog-mode . flycheck-mode)
   :init
-  ;; Must be set early to prevent ~/.emacs.d/transient from being created.
-  (setq transient-levels-file  (concat user-data-dir "transient/levels"))
-  (setq transient-values-file  (concat user-data-dir "transient/values"))
-  (setq transient-history-file (concat user-data-dir "transient/history")))
+  (progn
+    (define-fringe-bitmap 'my-flycheck-fringe-indicator
+      (vector #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00011100
+              #b00111110
+              #b00111110
+              #b00111110
+              #b00011100
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000))
+
+    (flycheck-define-error-level 'error
+      :severity 2
+      :overlay-category 'flycheck-error-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-error)
+
+    (flycheck-define-error-level 'warning
+      :severity 1
+      :overlay-category 'flycheck-warning-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-warning)
+
+    (flycheck-define-error-level 'info
+      :severity 0
+      :overlay-category 'flycheck-info-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-info))
+
+  (setq flycheck-display-errors-delay 0.25)
+  (setq flycheck-indication-mode 'right-fringe)
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (global-flycheck-mode 1))
 #+end_src
 
 ** Programming languages:
