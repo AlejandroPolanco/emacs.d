@@ -1047,7 +1047,10 @@ and authoring documents with a fast and effective plain-text system.
   (setq org-edit-src-content-indentation 0)
   ;; Checkbox behavior
   (setq org-enforce-todo-dependencies t)
-  (setq org-enforce-todo-checkbox-dependencies t))
+  (setq org-enforce-todo-checkbox-dependencies t)
+  ;; Images
+  (setq org-startup-with-inline-images t)
+  (setq org-image-actual-width nil))
 
 (org-babel-do-load-languages
  'org-babel-load-languages
