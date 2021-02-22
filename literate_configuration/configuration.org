@@ -427,12 +427,7 @@ The extensible vi layer for Emacs.
 #+begin_src emacs-lisp
 (use-package evil
   :demand t
-  :general
-  ;; TODO:
-  (nmap
-    "j" 'evil-next-visual-line
-    "k" 'evil-previous-visual-line)
-  :init
+  :preface
   ;; Needed by evil-collection package.
   (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
@@ -441,6 +436,7 @@ The extensible vi layer for Emacs.
   (setq evil-want-C-u-scroll t)
   (setq evil-want-C-d-scroll t)
   (setq evil-want-Y-yank-to-eol t)
+  :init
   ;; Miscellaneous
   (setq evil-esc-delay 0)
   (setq evil-echo-state t)
@@ -465,7 +461,6 @@ The extensible vi layer for Emacs.
   (evil-set-initial-state 'help-mode  'motion)
   (evil-set-initial-state 'nrepl-mode 'insert)
   (evil-set-initial-state 'dired-mode 'emacs)
-  ;; (evil-set-initial-state 'org-mode 'emacs)
 
   ;; Allows you to click buttons without initiating a selection.
   (define-key evil-motion-state-map [down-mouse-1] nil)
@@ -1020,18 +1015,18 @@ and authoring documents with a fast and effective plain-text system.
 (defun user/org-mode-setup ()
 "Create a minimalistic user experience by disabling certain minor settings."
 (org-indent-mode)
-(setq require-final-newline nil))
+(setq evil-auto-indent nil)
+(setq require-final-newline nil)
+(diminish org-indent-mode))
 #+end_src
 
 #+begin_src emacs-lisp
 (use-package org
   :hook (org-mode-hook . user/org-mode-setup)
-  :config
+  :init
   ;; Insead of "..." show "…" when there's hidden folded content
   ;; Some characters to choose from: …, ⤵, ▼, ↴, ⬎, ⤷, and ⋱
   (setq org-ellipsis " ⤵")
-
-  ;; Blocks
   (setq org-hide-block-startup t)
   ;; Markers
   (setq org-hide-emphasis-markers t)
@@ -1063,9 +1058,10 @@ and authoring documents with a fast and effective plain-text system.
 
 #+begin_src emacs-lisp
 (require 'org-tempo)
-
-(add-to-list 'org-structure-template-alist '("org" . "src org-mode"))
-(add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+(setq org-structure-template-alist
+      '(("s" . "src")
+        ("q" . "quote")
+        ("el" . "src emacs-lisp")))
 #+end_src
 
 **** Toc-org
