@@ -255,7 +255,8 @@ A use-package declaration for simplifying your .emacs
 (setq enable-recursive-minibuffers t)
 
 ;; keep the cursor out of the minibuffer.
-(setq minibuffer-prompt-properties '(read-only t intangible t cursor-intangible t face minibuffer-prompt))
+(setq minibuffer-prompt-properties
+      '(read-only t intangible t cursor-intangible t face minibuffer-prompt))
 
 ;; expand the minibuffer to fit multi-line text displayed in the echo-area.
 (setq max-mini-window-height 0.12)
@@ -323,26 +324,38 @@ A use-package declaration for simplifying your .emacs
 *** General coding style
 
 #+begin_src emacs-lisp
-;; use spaces for indentation. no hard tabs.
+;; Use spaces for indentation. no hard tabs.
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
-;; indent empty string and enable tab completion.
-(setq-default tab-always-indent 'complete)
+;; Hitting TAB indents the current line if point is at the left margin
+;; or in the line’s indentation, otherwise it inserts a "real" TAB character.
+(setq-default tab-always-indent nil)
 
-;; inhibit wrapping words/lines by default.
+;; Assume that sentences end with one space rather than two.
+(setq sentence-end-double-space nil)
+#+end_src
+
+Is 80 characters per line a standard worth sticking to even today ? [[https://softwareengineering.stackexchange.com/questions/148677/][link]]
+
+#+begin_src emacs-lisp
+(setq-default fill-column 80)
+
+;; Inhibit wrapping words/lines by default.
+(setq-default word-wrap t)
 (setq-default truncate-lines t)
 (setq-default truncate-partial-width-windows nil)
+#+end_src
 
-;; assume that sentences end with one space rather than two.
-(setq sentence-end-double-space nil)
+Best practice following the posix standard. [[https://stackoverflow.com/questions/729692/][link]]
 
-;; best practice following the posix standard.
-;; <https://stackoverflow.com/questions/729692/>
+#+begin_src emacs-lisp
 (setq require-final-newline t)
+#+end_src
 
-;; <https://www.gnu.org/software/emacs/manual/html_node/emacs/apropos.html>
-;; Make apropos more useful.
+Make apropos more useful. [[https://www.gnu.org/software/emacs/manual/html_node/emacs/apropos.html][link]]
+
+#+begin_src emacs-lisp
 (setq apropos-do-all t)
 #+end_src
 
@@ -1015,11 +1028,8 @@ and authoring documents with a fast and effective plain-text system.
 (defun user/org-mode-setup ()
   "Create a minimalistic user experience by disabling certain minor settings."
   (org-indent-mode)
-  (setq fill-column 80)
-  (visual-line-mode 1)
   (setq evil-auto-indent nil)
-  (setq require-final-newline nil)
-  (diminish org-indent-mode))
+  (setq require-final-newline nil))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -1060,6 +1070,11 @@ and authoring documents with a fast and effective plain-text system.
  '((emacs-lisp . t)))
 
 (setq org-confirm-babel-evaluate nil)
+#+end_src
+
+#+begin_src emacs-lisp
+;; https://emacs.stackexchange.com/questions/22531/
+(eval-after-load 'org-indent '(diminish 'org-indent-mode))
 #+end_src
 
 #+begin_src emacs-lisp
