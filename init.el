@@ -22,16 +22,840 @@
 
 ;;; Commentary:
 ;;
-;; A monolithic literate configuration.
+;; A monolithic configuration.
 
 ;;; Code:
 
-(require 'org)
+;; =============================================================================
+;; Startup and Garbage Collection
+;; =============================================================================
 
-;; Load main configuration.
+;; Restore the values of gc-cons-threshold and file-name-handler-alist after init.
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold user/gc-cons-threshold)
+            (setq gc-cons-percentage 0.1)
+            (setq file-name-handler-alist user/file-name-handler-alist)))
+
+;; Raise gc-cons-threshold while the minibuffer is active, so the GC doesn’t slow
+;; down expensive commands.
+
+(defun user/minibuffer-defer-garbage-collection ()
+  ;; Raise `gc-cons-threshold' while the minibuffer is active.
+  ;; This would benefit expensive commands or completion frameworks.
+  (setq gc-cons-threshold most-positive-fixnum))   ; 2^61 bytes
+
+(defun user/minibuffer-restore-garbage-collection ()
+  "Defer it so that commands launched immediately after will enjoy the benefits."
+  (run-at-time 1 nil (lambda () (setq gc-cons-threshold user/gc-cons-threshold))))
+
+(add-hook 'minibuffer-setup-hook #'user/minibuffer-defer-garbage-collection)
+(add-hook 'minibuffer-exit-hook  #'user/minibuffer-restore-garbage-collection)
+
+;; =============================================================================
+;; Directory management
+;; =============================================================================
+
+(defconst user-data-dir
+  (eval-when-compile (concat (file-truename user-emacs-directory) ".cache/"))
+  "Provide a location where Emacs can store static and dynamic data.")
+
+;; Automatically create missing directories.
+(dolist (dir (list user-data-dir))
+  (unless (file-directory-p dir)
+    (make-directory dir 'parents)))
+
+;; =============================================================================
+;; Custom
+;; =============================================================================
+
+;; Inhibit the custom-set-variables block in the init file.
+(setq custom-file (concat user-data-dir "custom.el"))
+(when (file-exists-p custom-file)
+  (load custom-file t t))
+
+;; =============================================================================
+;; Libraries
+;; =============================================================================
+
+;; Built-in utilities libraries that add a wealth of common-lisp inspired
+;; functions and macros. These libraries will be require by other packages.
+(require 'cl-lib)
+(require 'subr-x)
+
+;; =============================================================================
+;; Package management
+;; =============================================================================
+
+;; -----------------------------------------------------------------------------
+;; Emacs's built-in package management.
+;; -----------------------------------------------------------------------------
+(require 'package)
+
+;; Loads whichever version of the file is newest.
+(setq load-prefer-newer t)
+
+;; Tell package.el where to store Emacs Lisp code.
+(setq package-user-dir (concat user-data-dir "elpa/"))
+
+;; Adding a list of repositories.
+(setq package-archives '(("org"   . "http://orgmode.org/elpa/")
+                         ("gnu"   . "http://elpa.gnu.org/packages/")
+                         ("melpa" . "https://melpa.org/packages/")))
+
+;; -----------------------------------------------------------------------------
+;; Use-package
+;; -----------------------------------------------------------------------------
 (eval-when-compile
-  (if (file-exists-p (expand-file-name "configuration.el" user-emacs-directory))
-      (load-file (expand-file-name "configuration.el" user-emacs-directory))
-    (org-babel-load-file (expand-file-name (concat user-emacs-directory "literate_configuration/configuration.org")))))
+  ;; Ensure that `use-package' and dependencies are installed.
+  (unless package--initialized (package-initialize))
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package)
+    (package-install 'bind-key)
+    (package-install 'diminish))
+  (require 'use-package)
+  (require 'bind-key)
+  (require 'diminish))
+
+;; Control how use-package.el handle packages.
+(setq use-package-always-ensure t)
+(setq use-package-always-defer t)
+(setq use-package-always-demand nil)
+(setq use-package-hook-name-suffix nil)
+
+;; =============================================================================
+;; UI Enhancements
+;; =============================================================================
+
+;; -----------------------------------------------------------------------------
+;; Frame and buffer
+;; -----------------------------------------------------------------------------
+
+;; A simple frame title.
+(setq frame-title-format '("Emacs"))
+
+;; Update UI less frequently.
+(setq idle-update-delay 1.0)
+(setq jit-lock-defer-time 0)
+
+;; Give each frame/window the same number of pixels.
+(setq frame-resize-pixelwise t)
+(setq window-resize-pixelwise t)
+
+;; Minimal startup screen/message.
+(setq inhibit-default-init t)
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-screen t)
+(setq inhibit-startup-message t)
+(setq inhibit-startup-echo-area-message t)
+
+;; Inhibit the "For information about GNU Emacs..." message at startup.
+(advice-add #'display-startup-echo-area-message :override #'ignore)
+
+;; Hiding Scrollbar, tool bar, and menu.
+(tool-bar-mode   -1)
+(scroll-bar-mode -1)
+(menu-bar-mode   -1)
+
+;; Disable UI dialog.
+(setq use-dialog-box nil)
+(setq show-help-function nil)
+
+;; Disable bell (both visual and audible).
+(setq ring-bell-function #'ignore)
+(setq visible-bell nil)
+
+;; -----------------------------------------------------------------------------
+;; Font
+;; -----------------------------------------------------------------------------
+
+;; utf-8 coding system.
+(when (fboundp 'set-charset-priority)
+  (set-charset-priority 'unicode))
+(prefer-coding-system 'utf-8)
+(setq locale-coding-system 'utf-8)
+
+;; main typeface
+(set-face-attribute 'default nil
+                    :family "fira code"
+                    :height 120
+                    :weight 'normal
+                    :width  'normal)
+
+;; proportionately spaced typeface
+(set-face-attribute 'variable-pitch nil :family "fira code" :height 1.0)
+
+;; monospaced typeface
+(set-face-attribute 'fixed-pitch nil :family "fira code" :height 1.0)
+
+;; don’t compact font caches during garbage collection.
+(setq inhibit-compacting-font-caches t)
+
+;; -----------------------------------------------------------------------------
+;; Minibuffer
+;; -----------------------------------------------------------------------------
+
+;; show keystrokes in progress instantly.
+(setq echo-keystrokes 0.02)
+
+;; enable recursive minibuffers.
+(setq enable-recursive-minibuffers t)
+
+;; keep the cursor out of the minibuffer.
+(setq minibuffer-prompt-properties
+      '(read-only t intangible t cursor-intangible t face minibuffer-prompt))
+
+;; expand the minibuffer to fit multi-line text displayed in the echo-area.
+(setq max-mini-window-height 0.12)
+(setq resize-mini-windows 'grow-only)
+
+;; use y / n instead of yes / no.
+(setq confirm-kill-emacs #'y-or-n-p)
+(fset #'yes-or-no-p #'y-or-n-p)
+
+;; -----------------------------------------------------------------------------
+;; Cursor
+;; -----------------------------------------------------------------------------
+
+;; less distracting settings.
+(blink-cursor-mode -1)
+(setq blink-matching-paren nil)
+
+;; display the current column number.
+(setq column-number-mode t)
+
+;; don't stretch the cursor to fit wide characters.
+(setq x-stretch-cursor nil)
+
+;; keep cursor at end of lines.
+(setq-default track-eol t)
+(setq-default line-move-visual nil)
+
+;; inhibit rendering the cursor in non-focused windows.
+(setq-default cursor-in-non-selected-windows nil)
+(setq highlight-nonselected-windows nil)
+
+;; -----------------------------------------------------------------------------
+;; Scrolling
+;; -----------------------------------------------------------------------------
+
+;; vertical scroll
+(setq scroll-step 1)
+(setq scroll-margin 0)
+(setq scroll-conservatively 101)
+(setq scroll-up-aggressively 0.01)
+(setq scroll-down-aggressively 0.01)
+(setq auto-window-vscroll nil)
+(setq fast-but-imprecise-scrolling nil)
+(setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))
+(setq mouse-wheel-progressive-speed nil)
+
+;; horizontal scroll
+(setq hscroll-step 1)
+(setq hscroll-margin 1)
+
+;; -----------------------------------------------------------------------------
+;; Fringe
+;; -----------------------------------------------------------------------------
+
+;; make the right fringe 8 pixels wide and the left disappear.
+(fringe-mode '(8 . 8))
+
+;; reserve the fringe for more useful information.
+(setq indicate-empty-lines nil)
+(setq indicate-buffer-boundaries nil)
+
+;; -----------------------------------------------------------------------------
+;; General coding style
+;; -----------------------------------------------------------------------------
+
+;; Use spaces for indentation. no hard tabs.
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+
+;; Hitting TAB indents the current line if point is at the left margin
+;; or in the line’s indentation, otherwise it inserts a "real" TAB character.
+(setq-default tab-always-indent nil)
+
+;; Assume that sentences end with one space rather than two.
+(setq sentence-end-double-space nil)
+
+(setq-default fill-column 80)
+
+;; Inhibit wrapping words/lines by default.
+(setq-default word-wrap t)
+(setq-default truncate-lines t)
+(setq-default truncate-partial-width-windows nil)
+
+;; Best practice following the posix standard.
+(setq require-final-newline t)
+
+;; Make apropos more useful.
+(setq apropos-do-all t)
+
+;; =============================================================================
+;; Keybindings
+;; =============================================================================
+
+;; Better super/meta keys position on apple.
+(when (eq system-type 'darwin)
+  (setq mac-control-modifier nil)
+  (setq mac-option-modifier  'meta)
+  (setq mac-command-modifier 'control))
+
+;; -----------------------------------------------------------------------------
+;; Which-key
+;; -----------------------------------------------------------------------------
+(use-package which-key
+  :defer 1
+  :diminish
+  :config
+  (setq which-key-separator " → ")
+  (setq which-key-min-display-lines 6)
+  (setq which-key-add-column-padding 1)
+  (setq which-key-sort-uppercase-first nil)
+  (setq which-key-sort-order #'which-key-prefix-then-key-order)
+  (set-face-attribute 'which-key-local-map-description-face nil :weight 'bold)
+  (which-key-setup-side-window-bottom)
+  (which-key-mode 1))
+
+;; -----------------------------------------------------------------------------
+;; Hydra
+;; -----------------------------------------------------------------------------
+(use-package hydra
+  :defer 1
+  :diminish)
+
+;; =============================================================================
+;; Built-in packages
+;; =============================================================================
+
+;; -----------------------------------------------------------------------------
+;; Saveplace
+;; -----------------------------------------------------------------------------
+(use-package saveplace
+  :ensure nil
+  :demand t
+  :config
+  (setq save-place-file (concat user-data-dir "saveplace"))
+  (setq save-place-limit 100)
+  (save-place-mode 1))
+
+;; -----------------------------------------------------------------------------
+;; Paren-mode
+;; -----------------------------------------------------------------------------
+(use-package paren
+  :ensure nil
+  :defer 1
+  :hook (prog-mode-hook . show-paren-mode)
+  :config
+  (setq show-paren-delay 0.1)
+  (setq show-paren-highlight-openparen t)
+  (setq show-paren-when-point-inside-paren t)
+  (setq show-paren-when-point-in-periphery t))
+
+;; -----------------------------------------------------------------------------
+;; Recentf-mode
+;; -----------------------------------------------------------------------------
+(use-package recentf
+  :ensure nil
+  :defer 1
+  :config
+  (setq recentf-save-file (concat user-data-dir "recentf"))
+  (setq recentf-auto-cleanup 'never)
+  (setq recentf-max-saved-items 300)
+  (setq recentf-max-menu-items 0)
+  (recentf-mode 1))
+
+;; -----------------------------------------------------------------------------
+;; Autorevert
+;; -----------------------------------------------------------------------------
+(use-package autorevert
+  :ensure nil
+  :defer 1
+  :diminish
+  :config
+  (setq auto-revert-verbose t)
+  (setq auto-revert-use-notify nil)
+  (setq auto-revert-check-vc-info t)
+  (setq revert-without-query (list "."))
+  (global-auto-revert-mode 1))
+
+;; -----------------------------------------------------------------------------
+;; Savehist-mode
+;; -----------------------------------------------------------------------------
+(use-package savehist
+  :ensure nil
+  :defer 3
+  :config
+  (setq savehist-file (concat user-data-dir "savehist"))
+  (setq savehist-save-minibuffer-history t)
+  (setq savehist-autosave-interval 60)
+  (setq savehist-additional-variables
+        '(kill-ring                   ; persist clipboard
+          search-ring                 ; persist searches
+          regexp-search-ring))
+  (savehist-mode 1))
+
+;; -----------------------------------------------------------------------------
+;; Eldoc-mode
+;; -----------------------------------------------------------------------------
+(use-package eldoc
+  :ensure nil
+  :defer 5
+  :diminish
+  :hook (prog-mode-hook . eldoc-mode)
+  :config
+  (setq eldoc-idle-delay 0.2)
+  (setq eldoc-echo-area-use-multiline-p nil)
+  (global-eldoc-mode 1))
+
+;; -----------------------------------------------------------------------------
+;; Compile-mode
+;; -----------------------------------------------------------------------------
+(use-package compile
+  :ensure nil
+  :defer 5
+  :config
+  (setq compilation-always-kill t)
+  (setq compilation-ask-about-save nil)
+  (setq compilation-scroll-output 'first-error))
+
+;; =============================================================================
+;; Terminals & Shells
+;; =============================================================================
+
+;; -----------------------------------------------------------------------------
+;; Exec-path-from-shell
+;; -----------------------------------------------------------------------------
+(when (eq system-type 'darwin)
+  (use-package exec-path-from-shell
+    :demand t
+    :config
+    (setq exec-path-from-shell-variables '("PATH"))
+    (exec-path-from-shell-initialize)))
+
+;; =============================================================================
+;; Backups
+;; =============================================================================
+
+;; Don't save anything or create lock/history/backup files.
+(setq create-lockfiles nil)
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+(setq auto-save-list-file-prefix nil)
+
+;; =============================================================================
+;; Version control system
+;; =============================================================================
+(setq version-control t)
+(setq vc-follow-symlinks t)
+(setq delete-old-versions t)
+
+;; Convenient UI to browse through the differences between files or buffers.
+(setq ediff-diff-options "-w")  ; turn off whitespace checking.
+(setq ediff-split-window-function #'split-window-horizontally)
+(setq ediff-window-setup-function #'ediff-setup-windows-plain)
+
+;; -----------------------------------------------------------------------------
+;; Magit
+;; -----------------------------------------------------------------------------
+(use-package magit
+  :defer 1
+  :init
+  ;; Must be set early to prevent ~/.emacs.d/transient from being created.
+  (setq transient-levels-file  (concat user-data-dir "transient/levels"))
+  (setq transient-values-file  (concat user-data-dir "transient/values"))
+  (setq transient-history-file (concat user-data-dir "transient/history")))
+
+;; =============================================================================
+;; Project management
+;; =============================================================================
+
+;; -----------------------------------------------------------------------------
+;; Dired
+;; -----------------------------------------------------------------------------
+(use-package dired
+  :ensure nil
+  :hook ((dired-mode-hook . auto-revert-mode)
+         (dired-mode-hook . dired-hide-details-mode))
+  :init
+  (setq dired-dwim-target t)
+  (setq dired-use-ls-dired nil)
+  (setq dired-auto-revert-buffer t)
+  (setq dired-hide-details-hide-symlink-targets nil)
+  (setq dired-listing-switches "-alh --group-directories-first")
+  ;; Always copy/delete recursively
+  (setq dired-recursive-copies  'always)
+  (setq dired-recursive-deletes 'top)
+  :config
+
+  (defhydra hydra-dired (:hint nil :color pink)
+    "
+_+_ mkdir          _v_iew           _m_ark             _(_ details        _i_nsert-subdir    wdired
+_C_opy             _O_ view other   _U_nmark all       _)_ omit-mode      _$_ hide-subdir    C-x C-q : edit
+_D_elete           _o_pen other     _u_nmark           _l_ redisplay      _w_ kill-subdir    C-c C-c : commit
+_R_ename           _M_ chmod        _t_oggle           _g_ revert buf     _e_ ediff          C-c ESC : abort
+_Y_ rel symlink    _G_ chgrp        _E_xtension mark   _s_ort             _=_ pdiff
+_S_ymlink          ^ ^              _F_ind marked      _._ toggle hydra   \\ flyspell
+_r_sync            ^ ^              ^ ^                ^ ^                _?_ summary
+_z_ compress-file  _A_ find regexp
+_Z_ compress       _Q_ repl regexp
+T - tag prefix
+"
+    ("\\" dired-do-ispell)
+    ("(" dired-hide-details-mode)
+    (")" dired-omit-mode)
+    ("+" dired-create-directory)
+    ("=" diredp-ediff)         ;; smart diff
+    ("?" dired-summary)
+    ("$" diredp-hide-subdir-nomove)
+    ("A" dired-do-find-regexp)
+    ("C" dired-do-copy)        ;; Copy all marked files
+    ("D" dired-do-delete)
+    ("E" dired-mark-extension)
+    ("e" dired-ediff-files)
+    ("F" dired-do-find-marked-files)
+    ("G" dired-do-chgrp)
+    ("g" revert-buffer)        ;; read all directories again (refresh)
+    ("i" dired-maybe-insert-subdir)
+    ("l" dired-do-redisplay)   ;; relist the marked or singel directory
+    ("M" dired-do-chmod)
+    ("m" dired-mark)
+    ("O" dired-display-file)
+    ("o" dired-find-file-other-window)
+    ("Q" dired-do-find-regexp-and-replace)
+    ("R" dired-do-rename)
+    ("r" dired-do-rsynch)
+    ("S" dired-do-symlink)
+    ("s" dired-sort-toggle-or-edit)
+    ("t" dired-toggle-marks)
+    ("U" dired-unmark-all-marks)
+    ("u" dired-unmark)
+    ("v" dired-view-file)      ;; q to exit, s to search, = gets line #
+    ("w" dired-kill-subdir)
+    ("Y" dired-do-relsymlink)
+    ("z" diredp-compress-this-file)
+    ("Z" dired-do-compress)
+    ("q" nil)
+    ("." nil :color blue)))
+
+;; =============================================================================
+;; Linters
+;; =============================================================================
+
+;; -----------------------------------------------------------------------------
+;; Flycheck-mode
+;; -----------------------------------------------------------------------------
+(use-package flycheck
+  :diminish
+  :hook (prog-mode . flycheck-mode)
+  :init
+  (progn
+    (define-fringe-bitmap 'my-flycheck-fringe-indicator
+      (vector #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00011100
+              #b00111110
+              #b00111110
+              #b00111110
+              #b00011100
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000
+              #b00000000))
+
+    (flycheck-define-error-level 'error
+      :severity 2
+      :overlay-category 'flycheck-error-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-error)
+
+    (flycheck-define-error-level 'warning
+      :severity 1
+      :overlay-category 'flycheck-warning-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-warning)
+
+    (flycheck-define-error-level 'info
+      :severity 0
+      :overlay-category 'flycheck-info-overlay
+      :fringe-bitmap 'my-flycheck-fringe-indicator
+      :fringe-face 'flycheck-fringe-info))
+
+  (setq flycheck-display-errors-delay 0.25)
+  (setq flycheck-indication-mode 'right-fringe)
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (global-flycheck-mode 1))
+
+;; =============================================================================
+;; Tools
+;; =============================================================================
+
+;; -----------------------------------------------------------------------------
+;; Avy
+;; -----------------------------------------------------------------------------
+(use-package avy
+  :defer 5
+  ;; :general
+  ;; (user/leader-key
+  ;;   "g" '(:ignore t :which-key "Avy")
+  ;;   "gc" 'avy-goto-char
+  ;;   "gC" 'avy-goto-char-2
+  ;;   "gw" 'avy-goto-word-1
+  ;;   "gf" 'avy-goto-char-in-line
+  ;;   "g?" '(hydra-avy/body :which-key "Avy hydra"))
+  :config
+  (setq avy-background t)
+  (setq avy-all-windows nil)
+  (setq avy-highlight-first t)
+  (setq avy-case-fold-search nil)
+  (setq avy-single-candidate-jump nil)
+  (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  
+  (defhydra hydra-avy (:exit t :hint nil)
+    "
+ Line^^       Region^^        Goto
+----------------------------------------------------------
+ [_y_] yank   [_Y_] yank      [_c_] timed char  [_C_] char
+ [_m_] move   [_M_] move      [_w_] word        [_W_] any word
+ [_k_] kill   [_K_] kill      [_l_] line        [_L_] end of line"
+
+    ("c" avy-goto-char-timer)
+    ("C" avy-goto-char)
+    ("w" avy-goto-word-1)
+    ("W" avy-goto-word-0)
+    ("l" avy-goto-line)
+    ("L" avy-goto-end-of-line)
+    ("m" avy-move-line)
+    ("M" avy-move-region)
+    ("k" avy-kill-whole-line)
+    ("K" avy-kill-region)
+    ("y" avy-copy-line)
+    ("Y" avy-copy-region)))
+
+;; -----------------------------------------------------------------------------
+;; Ace Window
+;; -----------------------------------------------------------------------------
+(use-package ace-window
+  :defer 5
+  ;; :general
+  ;; (user/leader-key
+  ;;   "a" '(:ignore t :which-key "Ace-window")
+  ;;   "a?" '(hydra-frame-window/body :which-key "Ace Window hydra")
+  ;;   "aw" 'ace-window)
+  :config
+  (setq aw-background t)
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+
+  (defhydra hydra-frame-window (:color red :hint nil)
+    "
+^Delete^                       ^Frame resize^             ^Window^                Window Size^^^^^^   ^Text^                         (__)
+_0_: delete-frame              _g_: resize-frame-right    _t_: toggle               ^ ^ _k_ ^ ^        _K_                           (oo)
+_1_: delete-other-frames       _H_: resize-frame-left     _e_: ace-swap-win         _h_ ^+^ _l_        ^+^                     /------\\/
+_2_: make-frame                _F_: fullscreen            ^ ^                       ^ ^ _j_ ^ ^        _J_                    / |    ||
+_d_: kill-and-delete-frame     _n_: new-frame-right       _w_: ace-delete-window    _b_alance^^^^      ^ ^                   *  /\\---/\\  ~~  C-x f ;
+"
+    ("0" delete-frame :exit t)
+    ("1" delete-other-frames :exit t)
+    ("2" make-frame  :exit t)
+    ("b" balance-windows)
+    ("d" kill-and-delete-frame :exit t)
+    ("e" ace-swap-window)
+    ("F" toggle-frame-fullscreen)   ;; is <f11>
+    ("g" resize-frame-right :exit t)
+    ("H" resize-frame-left :exit t)  ;; aw-dispatch-alist uses h, I rebind here so hjkl can be used for size
+    ("n" new-frame-right :exit t)
+    ;; ("r" reverse-windows)
+    ("t" toggle-window-spilt)
+    ("w" ace-delete-window :exit t)
+    ("x" delete-frame :exit t)
+    ("K" text-scale-decrease)
+    ("J" text-scale-increase)
+    ("h" shrink-window-horizontally)
+    ("k" shrink-window)
+    ("j" enlarge-window)
+    ("l" enlarge-window-horizontally)))
+
+;; =============================================================================
+;; Programming languages
+;; =============================================================================
+
+;; -----------------------------------------------------------------------------
+;; Clojure
+;; -----------------------------------------------------------------------------
+
+;; Emacs support for the Clojure(Script) programming language.
+(use-package clojure-mode
+  :mode (("\\.clj\\'"  . clojure-mode)
+         ("\\.cljc\\'" . clojure-mode)
+         ("\\.cljs\\'" . clojurescript-mode)))
+
+;; CIDER: The Clojure Interactive Development Environment that Rocks for Emacs.
+(use-package cider
+  :after (clojure-mode)
+  :config
+  (setq cider-repl-history-file (concat user-data-dir "cider-repl-history"))
+  (setq cider-eldoc-display-for-symbol-at-point t)
+  (setq cider-repl-result-prefix ";; => "))
+
+;; Hydras for CIDER.
+(use-package cider-hydra
+  :init
+  ;; "C-c C-d" - cider-hydra-doc/body
+  ;; "C-c C-t" - cider-hydra-test/body
+  ;; "C-c M-t" - cider-hydra-test/body
+  ;; "C-c M-r" - cider-hydra-repl/body
+  (add-hook 'clojure-mode-hook #'cider-hydra-mode))
+
+;; -----------------------------------------------------------------------------
+;; Python
+;; -----------------------------------------------------------------------------
+
+;; Built-in major mode for Python.
+(use-package python
+  :config
+  (setq tab-width 4)
+  (setq python-indent-offset 4)
+  (setq python-indent-guess-indent-offset-verbose nil)
+
+  ;; Style used to fill docstrings.
+  (setq python-fill-docstring-style 'symmetric)
+
+  ;; Default to Python 3. Prefer the versioned Python binaries since
+  ;; some systems stupidly make the unversioned one point at Python 2.
+  (cond
+   ((executable-find "python3")
+    (setq python-shell-interpreter "python3"))
+   ((executable-find "python2")
+    (setq python-shell-interpreter "python2"))
+   (t
+    (setq python-shell-interpreter "python")))
+
+  (defun python-use-correct-flycheck-executables ()
+    "Use the correct Python executables for Flycheck."
+    (let ((executable python-shell-interpreter))
+      (save-excursion
+        (goto-char (point-min))
+        (save-match-data
+          (when (or (looking-at "#!/usr/bin/env \\(python[^ \n]+\\)")
+                    (looking-at "#!\\([^ \n]+/python[^ \n]+\\)"))
+            (setq executable (substring-no-properties (match-string 1))))))
+
+      ;; Try to compile using the appropriate version of Python for the file.
+      (setq-local flycheck-python-pycompile-executable executable)
+
+      ;; We might be running inside a virtualenv, in which case the
+      ;; modules won't be available. But calling the executables
+      ;; directly will work.
+      (setq-local flycheck-python-pylint-executable "pylint")
+      (setq-local flycheck-python-flake8-executable "flake8")))
+
+  (add-hook 'python-mode-hook #'python-use-correct-flycheck-executables))
+
+;; Python virtual environment interface for Emacs.
+(use-package pyvenv
+  :after (python)
+  :config
+  (add-hook 'python-mode-local-vars-hook #'pyvenv-track-virtualenv)
+  (add-to-list 'global-mode-string
+               '(pyvenv-virtual-env-name (" venv:" pyvenv-virtual-env-name " "))
+               'append))
+
+;; Use the python black package to reformat your python buffers.
+(use-package blacken
+  :hook (python-mode-hook . blacken-mode))
+
+;; -----------------------------------------------------------------------------
+;; Org-mode
+;; -----------------------------------------------------------------------------
+
+(defun user/org-mode-setup ()
+  "Create a minimalistic user experience by disabling certain minor settings."
+  (org-indent-mode)
+  (setq require-final-newline nil))
+
+(use-package org
+  :hook (org-mode-hook . user/org-mode-setup)
+  :init
+  ;; Insead of "..." show "…" when there's hidden folded content
+  ;; Some characters to choose from: …, ⤵, ▼, ↴, ⬎, ⤷, and ⋱
+  (setq org-ellipsis " ⤵")
+  (setq org-hide-block-startup t)
+  ;; Markers
+  (setq org-hide-emphasis-markers t)
+  (setq org-catch-invisible-edits 'show)
+  ;; List
+  (setq org-list-allow-alphabetical t)
+  ;; Leading stars
+  (setq org-hide-leading-stars t)
+  (setq org-hide-leading-stars-before-indent-mode t)
+  ;; Fontify
+  (setq org-return-follows-link t)
+  (setq org-fontify-done-headline t)
+  (setq org-fontify-quote-and-verse-blocks t)
+  ;; Source code blocks
+  (setq org-src-fontify-natively t)
+  (setq org-src-tab-acts-natively t)
+  (setq org-src-preserve-indentation t)
+  (setq org-edit-src-content-indentation 0)
+  (setq org-src-window-setup 'other-window)
+  ;; Checkbox behavior
+  (setq org-enforce-todo-dependencies t)
+  (setq org-enforce-todo-checkbox-dependencies t)
+  ;; Images
+  (setq org-startup-with-inline-images t)
+  (setq org-image-actual-width nil))
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)))
+
+(setq org-confirm-babel-evaluate nil)
+
+;; https://emacs.stackexchange.com/questions/22531/
+(eval-after-load 'org-indent '(diminish 'org-indent-mode))
+
+(require 'org-tempo)
+(setq org-structure-template-alist
+      '(("s" . "src")
+        ("q" . "quote")
+        ("el" . "src emacs-lisp")
+        ("clj" . "src clojure")
+        ("py" . "src python")))
+
+;; Toc-org
+(use-package toc-org
+  :hook (org-mode-hook . toc-org-mode))
+
+;; -----------------------------------------------------------------------------
+;; Web-mode
+;; -----------------------------------------------------------------------------
+
+(use-package web-mode
+  :mode ("\\.html\\'" "\\.css\\'" "\\.js\\'")
+  :bind ("C-c n" . web-mode-tag-match)
+  :config
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  ;; IDE features.
+  (setq web-mode-enable-auto-closing t)
+  (setq web-mode-enable-auto-opening t)
+  (setq web-mode-enable-auto-pairing t)
+  (setq web-mode-enable-auto-indentation t)
+  (setq web-mode-enable-css-colorization t)
+  (setq web-mode-enable-current-element-highlight t)
+  (setq web-mode-engines-alist '(("django"    . "\\.html\\'"))))
+
+;; Emmet's support for emacs.
+(use-package emmet-mode)
 
 ;;; init.el ends here
