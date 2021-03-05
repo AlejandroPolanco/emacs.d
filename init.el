@@ -30,27 +30,12 @@
 ;; Startup and Garbage Collection
 ;; =============================================================================
 
-;; Restore the values of gc-cons-threshold and file-name-handler-alist after init.
 (add-hook 'emacs-startup-hook
           (lambda ()
+            ;; Restore the values of gc-cons-threshold and file-name-handler-alist after init.
             (setq gc-cons-threshold user/gc-cons-threshold)
             (setq gc-cons-percentage 0.1)
             (setq file-name-handler-alist user/file-name-handler-alist)))
-
-;; Raise gc-cons-threshold while the minibuffer is active, so the GC doesn’t slow
-;; down expensive commands.
-
-(defun user/minibuffer-defer-garbage-collection ()
-  ;; Raise `gc-cons-threshold' while the minibuffer is active.
-  ;; This would benefit expensive commands or completion frameworks.
-  (setq gc-cons-threshold most-positive-fixnum))   ; 2^61 bytes
-
-(defun user/minibuffer-restore-garbage-collection ()
-  "Defer it so that commands launched immediately after will enjoy the benefits."
-  (run-at-time 1 nil (lambda () (setq gc-cons-threshold user/gc-cons-threshold))))
-
-(add-hook 'minibuffer-setup-hook #'user/minibuffer-defer-garbage-collection)
-(add-hook 'minibuffer-exit-hook  #'user/minibuffer-restore-garbage-collection)
 
 ;; =============================================================================
 ;; Directory management
@@ -433,7 +418,7 @@
   (use-package exec-path-from-shell
     :demand t
     :config
-    (setq exec-path-from-shell-variables '("PATH"))
+    (setq exec-path-from-shell-variables '("PATH" "INFOPATH" "PYTHONPATH"))
     (exec-path-from-shell-initialize)))
 
 ;; =============================================================================
@@ -480,7 +465,7 @@
   :ensure nil
   :hook ((dired-mode-hook . auto-revert-mode)
          (dired-mode-hook . dired-hide-details-mode))
-  :init
+  :config
   (setq dired-dwim-target t)
   (setq dired-use-ls-dired nil)
   (setq dired-auto-revert-buffer t)
@@ -488,201 +473,7 @@
   (setq dired-listing-switches "-alh --group-directories-first")
   ;; Always copy/delete recursively
   (setq dired-recursive-copies  'always)
-  (setq dired-recursive-deletes 'top)
-  :config
-
-  (defhydra hydra-dired (:hint nil :color pink)
-    "
-_+_ mkdir          _v_iew           _m_ark             _(_ details        _i_nsert-subdir    wdired
-_C_opy             _O_ view other   _U_nmark all       _)_ omit-mode      _$_ hide-subdir    C-x C-q : edit
-_D_elete           _o_pen other     _u_nmark           _l_ redisplay      _w_ kill-subdir    C-c C-c : commit
-_R_ename           _M_ chmod        _t_oggle           _g_ revert buf     _e_ ediff          C-c ESC : abort
-_Y_ rel symlink    _G_ chgrp        _E_xtension mark   _s_ort             _=_ pdiff
-_S_ymlink          ^ ^              _F_ind marked      _._ toggle hydra   \\ flyspell
-_r_sync            ^ ^              ^ ^                ^ ^                _?_ summary
-_z_ compress-file  _A_ find regexp
-_Z_ compress       _Q_ repl regexp
-T - tag prefix
-"
-    ("\\" dired-do-ispell)
-    ("(" dired-hide-details-mode)
-    (")" dired-omit-mode)
-    ("+" dired-create-directory)
-    ("=" diredp-ediff)         ;; smart diff
-    ("?" dired-summary)
-    ("$" diredp-hide-subdir-nomove)
-    ("A" dired-do-find-regexp)
-    ("C" dired-do-copy)        ;; Copy all marked files
-    ("D" dired-do-delete)
-    ("E" dired-mark-extension)
-    ("e" dired-ediff-files)
-    ("F" dired-do-find-marked-files)
-    ("G" dired-do-chgrp)
-    ("g" revert-buffer)        ;; read all directories again (refresh)
-    ("i" dired-maybe-insert-subdir)
-    ("l" dired-do-redisplay)   ;; relist the marked or singel directory
-    ("M" dired-do-chmod)
-    ("m" dired-mark)
-    ("O" dired-display-file)
-    ("o" dired-find-file-other-window)
-    ("Q" dired-do-find-regexp-and-replace)
-    ("R" dired-do-rename)
-    ("r" dired-do-rsynch)
-    ("S" dired-do-symlink)
-    ("s" dired-sort-toggle-or-edit)
-    ("t" dired-toggle-marks)
-    ("U" dired-unmark-all-marks)
-    ("u" dired-unmark)
-    ("v" dired-view-file)      ;; q to exit, s to search, = gets line #
-    ("w" dired-kill-subdir)
-    ("Y" dired-do-relsymlink)
-    ("z" diredp-compress-this-file)
-    ("Z" dired-do-compress)
-    ("q" nil)
-    ("." nil :color blue)))
-
-;; =============================================================================
-;; Linters
-;; =============================================================================
-
-;; -----------------------------------------------------------------------------
-;; Flycheck-mode
-;; -----------------------------------------------------------------------------
-(use-package flycheck
-  :diminish
-  :hook (prog-mode . flycheck-mode)
-  :init
-  (progn
-    (define-fringe-bitmap 'my-flycheck-fringe-indicator
-      (vector #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00011100
-              #b00111110
-              #b00111110
-              #b00111110
-              #b00011100
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000
-              #b00000000))
-
-    (flycheck-define-error-level 'error
-      :severity 2
-      :overlay-category 'flycheck-error-overlay
-      :fringe-bitmap 'my-flycheck-fringe-indicator
-      :fringe-face 'flycheck-fringe-error)
-
-    (flycheck-define-error-level 'warning
-      :severity 1
-      :overlay-category 'flycheck-warning-overlay
-      :fringe-bitmap 'my-flycheck-fringe-indicator
-      :fringe-face 'flycheck-fringe-warning)
-
-    (flycheck-define-error-level 'info
-      :severity 0
-      :overlay-category 'flycheck-info-overlay
-      :fringe-bitmap 'my-flycheck-fringe-indicator
-      :fringe-face 'flycheck-fringe-info))
-
-  (setq flycheck-display-errors-delay 0.25)
-  (setq flycheck-indication-mode 'right-fringe)
-  (setq flycheck-check-syntax-automatically '(save mode-enabled))
-  (global-flycheck-mode 1))
-
-;; =============================================================================
-;; Tools
-;; =============================================================================
-
-;; -----------------------------------------------------------------------------
-;; Avy
-;; -----------------------------------------------------------------------------
-(use-package avy
-  :defer 5
-  ;; :general
-  ;; (user/leader-key
-  ;;   "g" '(:ignore t :which-key "Avy")
-  ;;   "gc" 'avy-goto-char
-  ;;   "gC" 'avy-goto-char-2
-  ;;   "gw" 'avy-goto-word-1
-  ;;   "gf" 'avy-goto-char-in-line
-  ;;   "g?" '(hydra-avy/body :which-key "Avy hydra"))
-  :config
-  (setq avy-background t)
-  (setq avy-all-windows nil)
-  (setq avy-highlight-first t)
-  (setq avy-case-fold-search nil)
-  (setq avy-single-candidate-jump nil)
-  (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-  
-  (defhydra hydra-avy (:exit t :hint nil)
-    "
- Line^^       Region^^        Goto
-----------------------------------------------------------
- [_y_] yank   [_Y_] yank      [_c_] timed char  [_C_] char
- [_m_] move   [_M_] move      [_w_] word        [_W_] any word
- [_k_] kill   [_K_] kill      [_l_] line        [_L_] end of line"
-
-    ("c" avy-goto-char-timer)
-    ("C" avy-goto-char)
-    ("w" avy-goto-word-1)
-    ("W" avy-goto-word-0)
-    ("l" avy-goto-line)
-    ("L" avy-goto-end-of-line)
-    ("m" avy-move-line)
-    ("M" avy-move-region)
-    ("k" avy-kill-whole-line)
-    ("K" avy-kill-region)
-    ("y" avy-copy-line)
-    ("Y" avy-copy-region)))
-
-;; -----------------------------------------------------------------------------
-;; Ace Window
-;; -----------------------------------------------------------------------------
-(use-package ace-window
-  :defer 5
-  ;; :general
-  ;; (user/leader-key
-  ;;   "a" '(:ignore t :which-key "Ace-window")
-  ;;   "a?" '(hydra-frame-window/body :which-key "Ace Window hydra")
-  ;;   "aw" 'ace-window)
-  :config
-  (setq aw-background t)
-  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-
-  (defhydra hydra-frame-window (:color red :hint nil)
-    "
-^Delete^                       ^Frame resize^             ^Window^                Window Size^^^^^^   ^Text^                         (__)
-_0_: delete-frame              _g_: resize-frame-right    _t_: toggle               ^ ^ _k_ ^ ^        _K_                           (oo)
-_1_: delete-other-frames       _H_: resize-frame-left     _e_: ace-swap-win         _h_ ^+^ _l_        ^+^                     /------\\/
-_2_: make-frame                _F_: fullscreen            ^ ^                       ^ ^ _j_ ^ ^        _J_                    / |    ||
-_d_: kill-and-delete-frame     _n_: new-frame-right       _w_: ace-delete-window    _b_alance^^^^      ^ ^                   *  /\\---/\\  ~~  C-x f ;
-"
-    ("0" delete-frame :exit t)
-    ("1" delete-other-frames :exit t)
-    ("2" make-frame  :exit t)
-    ("b" balance-windows)
-    ("d" kill-and-delete-frame :exit t)
-    ("e" ace-swap-window)
-    ("F" toggle-frame-fullscreen)   ;; is <f11>
-    ("g" resize-frame-right :exit t)
-    ("H" resize-frame-left :exit t)  ;; aw-dispatch-alist uses h, I rebind here so hjkl can be used for size
-    ("n" new-frame-right :exit t)
-    ;; ("r" reverse-windows)
-    ("t" toggle-window-spilt)
-    ("w" ace-delete-window :exit t)
-    ("x" delete-frame :exit t)
-    ("K" text-scale-decrease)
-    ("J" text-scale-increase)
-    ("h" shrink-window-horizontally)
-    ("k" shrink-window)
-    ("j" enlarge-window)
-    ("l" enlarge-window-horizontally)))
+  (setq dired-recursive-deletes 'top))
 
 ;; =============================================================================
 ;; Programming languages
@@ -705,15 +496,6 @@ _d_: kill-and-delete-frame     _n_: new-frame-right       _w_: ace-delete-window
   (setq cider-repl-history-file (concat user-data-dir "cider-repl-history"))
   (setq cider-eldoc-display-for-symbol-at-point t)
   (setq cider-repl-result-prefix ";; => "))
-
-;; Hydras for CIDER.
-(use-package cider-hydra
-  :init
-  ;; "C-c C-d" - cider-hydra-doc/body
-  ;; "C-c C-t" - cider-hydra-test/body
-  ;; "C-c M-t" - cider-hydra-test/body
-  ;; "C-c M-r" - cider-hydra-repl/body
-  (add-hook 'clojure-mode-hook #'cider-hydra-mode))
 
 ;; -----------------------------------------------------------------------------
 ;; Python
@@ -739,39 +521,13 @@ _d_: kill-and-delete-frame     _n_: new-frame-right       _w_: ace-delete-window
    (t
     (setq python-shell-interpreter "python")))
 
-  (defun python-use-correct-flycheck-executables ()
-    "Use the correct Python executables for Flycheck."
-    (let ((executable python-shell-interpreter))
-      (save-excursion
-        (goto-char (point-min))
-        (save-match-data
-          (when (or (looking-at "#!/usr/bin/env \\(python[^ \n]+\\)")
-                    (looking-at "#!\\([^ \n]+/python[^ \n]+\\)"))
-            (setq executable (substring-no-properties (match-string 1))))))
-
-      ;; Try to compile using the appropriate version of Python for the file.
-      (setq-local flycheck-python-pycompile-executable executable)
-
-      ;; We might be running inside a virtualenv, in which case the
-      ;; modules won't be available. But calling the executables
-      ;; directly will work.
-      (setq-local flycheck-python-pylint-executable "pylint")
-      (setq-local flycheck-python-flake8-executable "flake8")))
-
-  (add-hook 'python-mode-hook #'python-use-correct-flycheck-executables))
-
-;; Python virtual environment interface for Emacs.
-(use-package pyvenv
-  :after (python)
-  :config
-  (add-hook 'python-mode-local-vars-hook #'pyvenv-track-virtualenv)
-  (add-to-list 'global-mode-string
-               '(pyvenv-virtual-env-name (" venv:" pyvenv-virtual-env-name " "))
-               'append))
-
-;; Use the python black package to reformat your python buffers.
-(use-package blacken
-  :hook (python-mode-hook . blacken-mode))
+  ;; Automatically remove trailing whitespace when file is saved.
+  (add-hook 'python-mode-hook
+            (lambda()
+              (add-hook 'local-write-file-hooks
+                        '(lambda()
+                           (save-excursion
+                             (delete-trailing-whitespace)))))))
 
 ;; -----------------------------------------------------------------------------
 ;; Org-mode
